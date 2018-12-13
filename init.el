@@ -1,7 +1,7 @@
 (require 'package)
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
 			 ("org" . "https://orgmode.org/elpa/")
-                         ("melpa" . "https://melpa.org/packages/")))
+			 ("melpa" . "https://melpa.org/packages/")))
 
 (setq tls-checktrust nil)
 (setq gnutls-verify-error nil)
@@ -14,6 +14,7 @@
   (package-install 'use-package))
 (load-library "use-package")
 (package-refresh-contents)
+(setq use-package-always-ensure t)
 
 (use-package magit)
 
@@ -38,7 +39,6 @@
 (use-package undo-tree)
 (defalias 'redo 'undo-tree-redo)
 
-(setq use-package-always-ensure t)
 (add-hook 'write-file-hooks 'delete-trailing-whitespace)
 (set-face-attribute 'default nil :height 80)
 
@@ -89,8 +89,8 @@ or go back to just one window (by deleting all but the selected window)."
   :when window-system
   :defer t
   :bind (("C-x P" . git-gutter:previous-hunk)
-         ("C-x N" . git-gutter:next-hunk)
-         ("C-c G" . git-gutter:popup-hunk))
+	 ("C-x N" . git-gutter:next-hunk)
+	 ("C-c G" . git-gutter:popup-hunk))
   :diminish ""
   :init
   (add-hook 'prog-mode-hook #'git-gutter-mode)
@@ -102,16 +102,16 @@ or go back to just one window (by deleting all but the selected window)."
     (require 'git-gutter-fringe)
     (when (fboundp 'define-fringe-bitmap)
       (define-fringe-bitmap 'git-gutter-fr:added
-        [224 224 224 224 224 224 224 224 224 224 224 224 224
-             224 224 224 224 224 224 224 224 224 224 224 224]
-        nil nil 'center)
+	[224 224 224 224 224 224 224 224 224 224 224 224 224
+	     224 224 224 224 224 224 224 224 224 224 224 224]
+	nil nil 'center)
       (define-fringe-bitmap 'git-gutter-fr:modified
-        [224 224 224 224 224 224 224 224 224 224 224 224 224
-             224 224 224 224 224 224 224 224 224 224 224 224]
-        nil nil 'center)
+	[224 224 224 224 224 224 224 224 224 224 224 224 224
+	     224 224 224 224 224 224 224 224 224 224 224 224]
+	nil nil 'center)
       (define-fringe-bitmap 'git-gutter-fr:deleted
-        [0 0 0 0 0 0 0 0 0 0 0 0 0 128 192 224 240 248]
-        nil nil 'center))))
+	[0 0 0 0 0 0 0 0 0 0 0 0 0 128 192 224 240 248]
+	nil nil 'center))))
 (customize-set-variable
    'git-gutter:update-interval 2)
 
@@ -127,12 +127,12 @@ or go back to just one window (by deleting all but the selected window)."
     (require 'helm-config)
     (helm-mode 1)
     (setq helm-quick-update                     t ; do not display invisible candidates
-          helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
-          helm-buffers-fuzzy-matching           t ; fuzzy matching buffer names when non--nil
-          helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
-          helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
-          helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
-          helm-ff-file-name-history-use-recentf t)))
+	  helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+	  helm-buffers-fuzzy-matching           t ; fuzzy matching buffer names when non--nil
+	  helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+	  helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+	  helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+	  helm-ff-file-name-history-use-recentf t)))
 (use-package helm-swoop)
 ;(global-set-key (kbd "M-x") 'execute-extended-command)
 
@@ -146,26 +146,26 @@ or go back to just one window (by deleting all but the selected window)."
   "Move current tab one place left, unless it's already the leftmost."
   (interactive)
   (let* ((bufset (tabbar-current-tabset t))
-         (old-bufs (tabbar-tabs bufset))
-         (first-buf (car old-bufs))
-         (new-bufs (list)))
+	 (old-bufs (tabbar-tabs bufset))
+	 (first-buf (car old-bufs))
+	 (new-bufs (list)))
     (if (string= (buffer-name) (format "%s" (car first-buf)))
-        old-bufs
+	old-bufs
       (setq not-yet-this-buf first-buf)
       (setq old-bufs (cdr old-bufs))
       (while (and
-              old-bufs
-              (not (string= (buffer-name) (format "%s" (car (car old-bufs))))))
-        (push not-yet-this-buf new-bufs)
-        (setq not-yet-this-buf (car old-bufs))
-        (setq old-bufs (cdr old-bufs)))
+	      old-bufs
+	      (not (string= (buffer-name) (format "%s" (car (car old-bufs))))))
+	(push not-yet-this-buf new-bufs)
+	(setq not-yet-this-buf (car old-bufs))
+	(setq old-bufs (cdr old-bufs)))
       (if old-bufs
-          (progn
-            (push (car old-bufs) new-bufs)
-            (push not-yet-this-buf new-bufs)
-            (setq new-bufs (reverse new-bufs))
-            (setq new-bufs (append new-bufs (cdr old-bufs))))
-        (error "Error: current buffer's name was not found in Tabbar's buffer list."))
+	  (progn
+	    (push (car old-bufs) new-bufs)
+	    (push not-yet-this-buf new-bufs)
+	    (setq new-bufs (reverse new-bufs))
+	    (setq new-bufs (append new-bufs (cdr old-bufs))))
+	(error "Error: current buffer's name was not found in Tabbar's buffer list."))
       (set bufset new-bufs)
       (tabbar-set-template bufset nil)
       (tabbar-display-update))))
@@ -174,21 +174,21 @@ or go back to just one window (by deleting all but the selected window)."
   "Move current tab one place right, unless it's already the rightmost."
   (interactive)
   (let* ((bufset (tabbar-current-tabset t))
-         (old-bufs (tabbar-tabs bufset))
-         (first-buf (car old-bufs))
-         (new-bufs (list)))
+	 (old-bufs (tabbar-tabs bufset))
+	 (first-buf (car old-bufs))
+	 (new-bufs (list)))
     (while (and
-            old-bufs
-            (not (string= (buffer-name) (format "%s" (car (car old-bufs))))))
+	    old-bufs
+	    (not (string= (buffer-name) (format "%s" (car (car old-bufs))))))
       (push (car old-bufs) new-bufs)
       (setq old-bufs (cdr old-bufs)))
     (if old-bufs
-        (progn
-          (setq the-buffer (car old-bufs))
-          (setq old-bufs (cdr old-bufs))
-          (if old-bufs
-              (push (car old-bufs) new-bufs))
-          (push the-buffer new-bufs))
+	(progn
+	  (setq the-buffer (car old-bufs))
+	  (setq old-bufs (cdr old-bufs))
+	  (if old-bufs
+	      (push (car old-bufs) new-bufs))
+	  (push the-buffer new-bufs))
       (error "Error: current buffer's name was not found in Tabbar's buffer list."))
     (setq new-bufs (reverse new-bufs))
     (setq new-bufs (append new-bufs (cdr old-bufs)))
@@ -205,10 +205,10 @@ or go back to just one window (by deleting all but the selected window)."
 ;; space around the label to make it looks less crowd.c
 (defadvice tabbar-buffer-tab-label (after fixup_tab_label_space_and_flag activate)
   (setq ad-return-value
-        (if (and (buffer-modified-p (tabbar-tab-value tab))
-                 (buffer-file-name (tabbar-tab-value tab)))
-            (concat " + " (concat ad-return-value " "))
-          (concat " " (concat ad-return-value " ")))))
+	(if (and (buffer-modified-p (tabbar-tab-value tab))
+		 (buffer-file-name (tabbar-tab-value tab)))
+	    (concat " + " (concat ad-return-value " "))
+	  (concat " " (concat ad-return-value " ")))))
 
 ;; Called each time the modification state of the buffer changed.
 (defun ztl-modification-state-change ()
@@ -229,9 +229,9 @@ or go back to just one window (by deleting all but the selected window)."
     dired buffers), and the rest.  This works at least with Emacs v24.2 using
     tabbar.el v1.7."
   (list (cond ((string-equal "*" (substring (buffer-name) 0 1)) "emacs")
-              ((eq major-mode 'dired-sidebar) "emacs")
-              ((eq major-mode 'dired-mode) "emacs")
-              (t "user"))))
+	      ((eq major-mode 'dired-sidebar) "emacs")
+	      ((eq major-mode 'dired-mode) "emacs")
+	      (t "user"))))
 
 (setq tabbar-buffer-groups-function 'my-tabbar-buffer-groups)
 
@@ -280,16 +280,16 @@ or go back to just one window (by deleting all but the selected window)."
   "Return a label for TAB.
 That is, a string used to represent it on the tab bar."
   (let ((label  (if tabbar--buffer-show-groups
-                    (format "[%s]  " (tabbar-tab-tabset tab))
-                  (format "%s  " (tabbar-tab-value tab)))))
+		    (format "[%s]  " (tabbar-tab-tabset tab))
+		  (format "%s  " (tabbar-tab-value tab)))))
     ;; Unless the tab bar auto scrolls to keep the selected tab
     ;; visible, shorten the tab label to keep as many tabs as possible
     ;; in the visible area of the tab bar.
     (if tabbar-auto-scroll-flag
-        label
+	label
       (tabbar-shorten
        label (max 1 (/ (window-width)
-                       (length (tabbar-view
+		       (length (tabbar-view
 				(tabbar-current-tabset)))))))))
 
 ;; This doesn't work for revert, I don't know.
@@ -322,9 +322,9 @@ That is, a string used to represent it on the tab bar."
   :commands (dired-sidebar-toggle-sidebar)
   :init
   (add-hook 'dired-sidebar-mode-hook
-            (lambda ()
-              (unless (file-remote-p default-directory)
-                (auto-revert-mode))))
+	    (lambda ()
+	      (unless (file-remote-p default-directory)
+		(auto-revert-mode))))
   :config
   (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
   (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
@@ -351,10 +351,10 @@ That is, a string used to represent it on the tab bar."
 (use-package persp-mode-projectile-bridge
   :config
   (add-hook 'persp-mode-projectile-bridge-mode-hook
-            #'(lambda ()
-                (if persp-mode-projectile-bridge-mode
-                    (persp-mode-projectile-bridge-find-perspectives-for-all-buffers)
-                  (persp-mode-projectile-bridge-kill-perspectives))))
+	    #'(lambda ()
+		(if persp-mode-projectile-bridge-mode
+		    (persp-mode-projectile-bridge-find-perspectives-for-all-buffers)
+		  (persp-mode-projectile-bridge-kill-perspectives))))
   (persp-mode-projectile-bridge-mode 1)
   )
 
@@ -383,12 +383,9 @@ That is, a string used to represent it on the tab bar."
   :ensure t)
 (use-package web-mode
   :ensure t)
-;(use-package color-theme-monokai)
-;(load-theme 'monokai t)
-(load-theme 'monokai-alt t)
-
-
-
+;; (use-package color-theme-monokai)
+(load-theme 'monokai t)
+;(load-theme 'monokai-alt t)
 (defvar killed-file-list nil
   "List of recently killed files.")
 
@@ -421,7 +418,24 @@ Version 2017-11-01"
     $buf
     ))
 
-(global-set-key (kbd "C-M-c") 'comment-line)
+(use-package idle-highlight-in-visible-buffers-mode
+  :config
+  (set-face-attribute 'idle-highlight-in-visible-buffers nil :foreground "SpringGreen3" :weight 'bold)
+  (add-hook 'prog-mode-hook 'idle-highlight-in-visible-buffers-mode)
+  )
+
+;; Optional
+
+(defun good-comment ()
+  (interactive)
+  (progn
+    (if (and (eq (char-before) 10) (looking-at "[:blank:]*\n"))
+	(progn
+	  (whitespace-cleanup)
+	(comment-dwim nil))
+      (save-excursion (comment-line 1)))))
+
+(global-set-key (kbd "C-M-c") 'good-comment)
 
 ;;kek
 (defun my-forward-word ()
