@@ -11,6 +11,7 @@
 - search occurences stuff
 - go to definition (C-r like in subl)
 - better sidebar shortcuts
+- snippets
 - maybe hydra stuff for buffer manipulation
 - better new file mode (lol)
 - find a good theme
