@@ -425,7 +425,17 @@ Version 2017-11-01"
 
 ;;kek
 (defun my-forward-word ()
-  (interactive)
+  (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
-	((looking-at "\\W+\n") (progn (message "%s" (char-after)) (end-of-visual-line)))
+	((looking-at "\\W+\n") (progn (message "%s" (char-after)) (end-of-line)))
 	(t (forward-word))))
+
+;; (interactive "^") means "please emacs deal with shift correctly.
+(defun my-backward-word ()
+  (interactive "^")
+  (cond ((eq (char-before) 10) (left-char 1))
+	((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
+	(t (backward-word))))
+
+(global-set-key (kbd "C-<right>") 'my-forward-word)
+(global-set-key (kbd "C-<left>") 'backward-word)
