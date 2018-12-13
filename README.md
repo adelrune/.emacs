@@ -18,3 +18,5 @@
 - better python indent ?
 
 And probably much more stuff
+
+(stuff is the theme word of this repo)
