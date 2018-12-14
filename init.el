@@ -15,7 +15,7 @@
 (load-library "use-package")
 (package-refresh-contents)
 (setq use-package-always-ensure t)
-
+(use-package dired-hacks-utils)
 (use-package magit)
 
 (use-package auto-complete
@@ -274,7 +274,7 @@ or go back to just one window (by deleting all but the selected window)."
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -383,7 +383,7 @@ That is, a string used to represent it on the tab bar."
   :ensure t)
 (use-package web-mode
   :ensure t)
-;; (use-package color-theme-monokai)
+(use-package monokai-theme)
 (load-theme 'monokai t)
 ;(load-theme 'monokai-alt t)
 (defvar killed-file-list nil
@@ -441,15 +441,41 @@ Version 2017-11-01"
 (defun my-forward-word ()
   (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
-	((looking-at "\\W+\n") (progn (message "%s" (char-after)) (end-of-line)))
+	((looking-at "\\W+\n") (progn (message "%s" (looking-at "\\W+\n")) (end-of-line)))
 	(t (forward-word))))
 
 ;; (interactive "^") means "please emacs deal with shift correctly.
 (defun my-backward-word ()
   (interactive "^")
-  (cond ((eq (char-before) 10) (left-char 1))
-	((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
-	(t (backward-word))))
+  (let
+      ((crossed-a-line nil)
+       (old-linum (line-number-at-pos)))
+    (if (eq (char-before) 10)
+	(left-char 1)
+      (save-excursion
+	(progn
+	  (backward-word)
+	  (setq crossed-a-line (< (line-number-at-pos) old-linum))))
+      (if crossed-a-line
+          (beginning-of-line)
+	(backward-word)))))
+  ;; (cond ((eq (char-before) 10) (left-char 1))
+  ;; 	((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
+  ;; 	(t (backward-word))))
 
 (global-set-key (kbd "C-<right>") 'my-forward-word)
-(global-set-key (kbd "C-<left>") 'backward-word)
+(global-set-key (kbd "C-<left>") 'my-backward-word)
+
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
