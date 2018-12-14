@@ -22,20 +22,35 @@
   :config
   (global-auto-complete-mode t)
   (setq ac-sources '(ac-source-words-in-all-buffer))
-  (setq ac-disable-faces nil))
+  (setq ac-disable-faces nil)
 
+  (setq ac-auto-show-menu    0.2)
+  (setq ac-delay             0.2)
+  (setq ac-menu-height       20)
+  (setq ac-auto-start t)
+  (setq ac-show-menu-immediately-on-auto-complete t))
 
-
-(use-package smooth-scroll
-  :config
-  (smooth-scroll-mode 1)
-  (setq smooth-scroll/vscroll-step-size 5)
-  )
+;; smooth scrolling and visual fluffy stuff
+(use-package sublimity)
+(require 'sublimity-scroll)
+(setq sublimity-scroll-weight 5z
+      sublimity-scroll-drift-length 10)
+(sublimity-mode 1)
+(setq scroll-conservatively 10000)
 
 (use-package anaconda-mode)
 (add-hook 'python-mode-hook 'anaconda-mode)
 (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+(use-package minimap)
+(setq minimap-window-location 'right)
 
+(custom-set-faces
+  '(minimap-active-region-background
+    ((((background dark)) (:background "#3A3A3A222222"))
+      (t (:background "#D3D3D3222222")))
+    "Face for the active region in the minimap.
+By default, this is only a different background color."
+    :group 'minimap))
 (use-package undo-tree)
 (defalias 'redo 'undo-tree-redo)
 
@@ -457,11 +472,11 @@ Version 2017-11-01"
 	  (backward-word)
 	  (setq crossed-a-line (< (line-number-at-pos) old-linum))))
       (if crossed-a-line
-          (beginning-of-line)
+	  (beginning-of-line)
 	(backward-word)))))
   ;; (cond ((eq (char-before) 10) (left-char 1))
-  ;; 	((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
-  ;; 	(t (backward-word))))
+  ;;	((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
+  ;;	(t (backward-word))))
 
 (global-set-key (kbd "C-<right>") 'my-forward-word)
 (global-set-key (kbd "C-<left>") 'my-backward-word)
@@ -470,8 +485,8 @@ Version 2017-11-01"
   :ensure t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode))
+	 ("\\.md\\'" . markdown-mode)
+	 ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
