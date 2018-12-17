@@ -33,7 +33,7 @@
 ;; smooth scrolling and visual fluffy stuff
 (use-package sublimity)
 (require 'sublimity-scroll)
-(setq sublimity-scroll-weight 5z
+(setq sublimity-scroll-weight 5
       sublimity-scroll-drift-length 10)
 (sublimity-mode 1)
 (setq scroll-conservatively 10000)
