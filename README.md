@@ -6,6 +6,8 @@
 - select between matching {[(
 - move between matching {[(
 - move line/lines
+- don't put things in clipboard with C-k
+- copy whole line with C-c with no region
 - multiple cursors (cua-mode breakage and stuff)
 - better autocomplete (python, less delai, no wrong guesses)
 - search occurences stuff

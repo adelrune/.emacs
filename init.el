@@ -24,8 +24,8 @@
   (setq ac-sources '(ac-source-words-in-all-buffer))
   (setq ac-disable-faces nil)
 
-  (setq ac-auto-show-menu    0.2)
-  (setq ac-delay             0.2)
+  (setq ac-auto-show-menu    0.3)
+  (setq ac-delay             0.3)
   (setq ac-menu-height       20)
   (setq ac-auto-start t)
   (setq ac-show-menu-immediately-on-auto-complete t))
@@ -41,16 +41,16 @@
 (use-package anaconda-mode)
 (add-hook 'python-mode-hook 'anaconda-mode)
 (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
-(use-package minimap)
-(setq minimap-window-location 'right)
+;; (use-package minimap)
+;; (setq minimap-window-location 'right)
 
-(custom-set-faces
-  '(minimap-active-region-background
-    ((((background dark)) (:background "#3A3A3A222222"))
-      (t (:background "#D3D3D3222222")))
-    "Face for the active region in the minimap.
-By default, this is only a different background color."
-    :group 'minimap))
+;; (custom-set-faces
+;;   '(minimap-active-region-background
+;;     ((((background dark)) (:background "#3A3A3A222222"))
+;;       (t (:background "#D3D3D3222222")))
+;;     "Face for the active region in the minimap.
+;; By default, this is only a different background color."
+;;     :group 'minimap))
 (use-package undo-tree)
 (defalias 'redo 'undo-tree-redo)
 
@@ -378,7 +378,7 @@ That is, a string used to represent it on the tab bar."
 (global-set-key (kbd "C-S-k") 'kill-whole-line)
 
 (cua-mode)
-
+(global-set-key (kbd "C-c") 'kill-whole-line)
 (when (display-graphic-p)
   (scroll-bar-mode -1)
   (tool-bar-mode -1))
@@ -433,11 +433,14 @@ Version 2017-11-01"
     $buf
     ))
 
+
+
 (use-package idle-highlight-in-visible-buffers-mode
   :config
-  (set-face-attribute 'idle-highlight-in-visible-buffers nil :foreground "SpringGreen3" :weight 'bold)
+  (set-face-attribute 'idle-highlight-in-visible-buffers nil :weight 'bold :background "Purple4")
   (add-hook 'prog-mode-hook 'idle-highlight-in-visible-buffers-mode)
   )
+
 
 ;; Optional
 
@@ -480,6 +483,14 @@ Version 2017-11-01"
 
 (global-set-key (kbd "C-<right>") 'my-forward-word)
 (global-set-key (kbd "C-<left>") 'my-backward-word)
+(defun my-next-win ()
+    (interactive)
+  (other-window 1))
+(defun my-previous-win ()
+    (interactive)
+  (other-window -1))
+(global-set-key (kbd "C-M-<prior>") 'my-previous-win)
+(global-set-key (kbd "C-M-<next>") 'my-next-win)
 
 (use-package markdown-mode
   :ensure t
