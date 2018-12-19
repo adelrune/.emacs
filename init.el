@@ -375,7 +375,14 @@ That is, a string used to represent it on the tab bar."
 
 
 ;; Funky stuff
-(global-set-key (kbd "C-S-k") 'kill-whole-line)
+
+(defun ruthlessly-kill-line ()
+  "Deletes a line, but does not put it in the kill-ring. (kinda)"
+  (interactive)
+  (move-beginning-of-line 1)
+  (kill-line 1)
+  (setq kill-ring (cdr kill-ring)))
+(global-set-key (kbd "C-S-k") 'ruthlessly-kill-line)
 
 (cua-mode)
 (global-set-key (kbd "C-c") 'kill-whole-line)
@@ -459,10 +466,20 @@ Version 2017-11-01"
 (defun my-forward-word ()
   (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
-	((looking-at "\\W+\n") (progn (message "%s" (looking-at "\\W+\n")) (end-of-line)))
+	((looking-at "\\W+\n") (end-of-line))
 	(t (forward-word))))
 
 ;; (interactive "^") means "please emacs deal with shift correctly.
+
+(defun my-forward-kill-word ()
+  (interactive)
+  (cond ((eq (char-after) 10) (delete-forward-char 1))
+	((looking-at "\\W+\n") (delete-region (point) (line-end-position)))
+	(t (let ((final-char-point nil))
+	     (save-excursion (forward-word)
+			     (setq final-char-point (point)))
+	     (delete-region (point) final-char-point)))))
+
 (defun my-backward-word ()
   (interactive "^")
   (let
@@ -477,12 +494,30 @@ Version 2017-11-01"
       (if crossed-a-line
 	  (beginning-of-line)
 	(backward-word)))))
+
+(defun my-backward-kill-word ()
+  (interactive)
+  (let
+      ((crossed-a-line nil)
+       (old-linum (line-number-at-pos))
+       (final-char-point nil))
+    (if (eq (char-before) 10)
+	(delete-forward-char -1)
+      (save-excursion
+	(progn
+	  (backward-word)
+	  (setq final-char-point (point))
+	  (setq crossed-a-line (< (line-number-at-pos) old-linum))))
+      (if crossed-a-line
+	  (delete-region (point) final-char-point)))))
+
   ;; (cond ((eq (char-before) 10) (left-char 1))
   ;;	((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
   ;;	(t (backward-word))))
-
+(global-set-key (kbd "C-<backspace>") 'my-backward-kill-word)
 (global-set-key (kbd "C-<right>") 'my-forward-word)
 (global-set-key (kbd "C-<left>") 'my-backward-word)
+(global-set-key (kbd "C-<delete>") 'my-forward-kill-word)
 (defun my-next-win ()
     (interactive)
   (other-window 1))
