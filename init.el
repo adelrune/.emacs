@@ -32,9 +32,9 @@
 
 ;; smooth scrolling and visual fluffy stuff
 (use-package sublimity)
-(require 'sublimity-scroll)
-(setq sublimity-scroll-weight 5
-      sublimity-scroll-drift-length 10)
+;; (require 'sublimity-scroll)
+;; (setq sublimity-scroll-weight 5
+;;       sublimity-scroll-drift-length 10)
 (sublimity-mode 1)
 (setq scroll-conservatively 10000)
 
@@ -449,25 +449,32 @@ Version 2017-11-01"
   )
 
 
-;; Optional
-
+;; TODO : fix this.
 (defun good-comment ()
   (interactive)
   (progn
     (if (and (eq (char-before) 10) (looking-at "[:blank:]*\n"))
         (progn
-          (whitespace-cleanup)
         (comment-dwim nil))
       (save-excursion (comment-line 1)))))
 
 (global-set-key (kbd "C-M-c") 'good-comment)
 
-;;kek
+;; All of this shit is to simulate sublime's way of dealing with shift
+(global-subword-mode 1)
+;;Higher order function would be nice but I can't be bothered to learn elisp
+;; TODO : make this part less dumb
 (defun my-forward-word ()
   (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
         ((looking-at "\\W+\n") (end-of-line))
         (t (forward-word))))
+
+(defun my-forward-symbol ()
+  (interactive "^")
+  (cond ((eq (char-after) 10) (right-char 1))
+        ((looking-at "\\W+\n") (end-of-line))
+        (t (forward-symbol 1))))
 
 ;; (interactive "^") means "please emacs deal with shift correctly.
 
@@ -477,6 +484,15 @@ Version 2017-11-01"
         ((looking-at "\\W+\n") (delete-region (point) (line-end-position)))
         (t (let ((final-char-point nil))
              (save-excursion (forward-word)
+                             (setq final-char-point (point)))
+             (delete-region (point) final-char-point)))))
+
+(defun my-forward-kill-symbol ()
+  (interactive)
+  (cond ((eq (char-after) 10) (delete-forward-char 1))
+        ((looking-at "\\W+\n") (delete-region (point) (line-end-position)))
+        (t (let ((final-char-point nil))
+             (save-excursion (forward-symbol 1)
                              (setq final-char-point (point)))
              (delete-region (point) final-char-point)))))
 
@@ -495,9 +511,20 @@ Version 2017-11-01"
           (beginning-of-line)
         (backward-word)))))
 
-(global-auto-revert-mode)
-(setq-default indent-tabs-mode nil)
-
+(defun my-backward-symbol ()
+  (interactive "^")
+  (let
+      ((crossed-a-line nil)
+       (old-linum (line-number-at-pos)))
+    (if (eq (char-before) 10)
+        (left-char 1)
+      (save-excursion
+        (progn
+          (forward-symbol -1)
+          (setq crossed-a-line (< (line-number-at-pos) old-linum))))
+      (if crossed-a-line
+          (beginning-of-line)
+        (forward-symbol -1)))))
 
 (defun my-backward-kill-word ()
   (interactive)
@@ -517,13 +544,35 @@ Version 2017-11-01"
         (delete-region (point) final-char-point)
         ))))
 
+(defun my-backward-kill-symbol ()
+  (interactive)
+  (let
+      ((crossed-a-line nil)
+       (old-linum (line-number-at-pos))
+       (final-char-point nil))
+    (if (eq (char-before) 10)
+        (delete-backward-char 1)
+      (save-excursion
+        (progn
+          (forward-symbol -1)
+          (setq final-char-point (point))
+          (setq crossed-a-line (< (line-number-at-pos) old-linum))))
+      (if crossed-a-line
+          (delete-region (point) (line-beginning-position))
+        (delete-region (point) final-char-point)
+        ))))
+
   ;; (cond ((eq (char-before) 10) (left-char 1))
   ;;    ((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
   ;;    (t (backward-word))))
-(global-set-key (kbd "C-<backspace>") 'my-backward-kill-word)
-(global-set-key (kbd "C-<right>") 'my-forward-word)
-(global-set-key (kbd "C-<left>") 'my-backward-word)
-(global-set-key (kbd "C-<delete>") 'my-forward-kill-word)
+(global-set-key (kbd "C-<backspace>") 'my-backward-kill-symbol)
+(global-set-key (kbd "C-<right>") 'my-forward-symbol)
+(global-set-key (kbd "C-<left>") 'my-backward-symbol)
+(global-set-key (kbd "C-<delete>") 'my-forward-kill-symbol)
+(global-set-key (kbd "M-<backspace>") 'my-backward-kill-word)
+(global-set-key (kbd "M-<right>") 'my-forward-word)
+(global-set-key (kbd "M-<left>") 'my-backward-word)
+(global-set-key (kbd "M-<delete>") 'my-forward-kill-word)
 (defun my-next-win ()
     (interactive)
   (other-window 1))
@@ -547,5 +596,19 @@ Version 2017-11-01"
  ;; If there is more than one, they won't work right.
  )
 
+
+;; thanks emacs rocks person
+;; UTF-8 please
+(setq locale-coding-system 'utf-8) ; pretty
+(set-terminal-coding-system 'utf-8) ; pretty
+(set-keyboard-coding-system 'utf-8) ; pretty
+(set-selection-coding-system 'utf-8) ; please
+(prefer-coding-system 'utf-8) ; with sugar on top
+
 (use-package multiple-cursors)
-(require
+(require 'multiple-cursors-core)
+
+
+
+(global-auto-revert-mode)
+(setq-default indent-tabs-mode nil)
