@@ -289,7 +289,7 @@ or go back to just one window (by deleting all but the selected window)."
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -495,6 +495,8 @@ Version 2017-11-01"
 	  (beginning-of-line)
 	(backward-word)))))
 
+(global-auto-revert-mode)
+
 (defun my-backward-kill-word ()
   (interactive)
   (let
@@ -502,14 +504,16 @@ Version 2017-11-01"
        (old-linum (line-number-at-pos))
        (final-char-point nil))
     (if (eq (char-before) 10)
-	(delete-forward-char -1)
+	(delete-backward-char 1)
       (save-excursion
 	(progn
 	  (backward-word)
 	  (setq final-char-point (point))
 	  (setq crossed-a-line (< (line-number-at-pos) old-linum))))
       (if crossed-a-line
-	  (delete-region (point) final-char-point)))))
+	  (delete-region (point) (line-beginning-position))
+	(delete-region (point) final-char-point)
+	))))
 
   ;; (cond ((eq (char-before) 10) (left-char 1))
   ;;	((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
@@ -540,3 +544,6 @@ Version 2017-11-01"
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(use-package multiple-cursors)
+(require
