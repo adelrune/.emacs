@@ -614,8 +614,6 @@ Version 2017-11-01"
   (if mark-active
       (progn
         (mc/mark-next-like-this-symbol 1)
-        (message "%s" (mc/furthest-cursor-after-point))
-        (message "%s" (window-end))
         (while (> (overlay-start (mc/furthest-cursor-after-point)) (window-end)) (mc/cycle-forward)))
     (progn
       (mc--mark-symbol-at-point)
