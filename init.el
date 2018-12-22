@@ -289,7 +289,7 @@ or go back to just one window (by deleting all but the selected window)."
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -561,7 +561,6 @@ Version 2017-11-01"
           (delete-region (point) (line-beginning-position))
         (delete-region (point) final-char-point)
         ))))
-
   ;; (cond ((eq (char-before) 10) (left-char 1))
   ;;    ((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
   ;;    (t (backward-word))))
@@ -604,11 +603,26 @@ Version 2017-11-01"
 (set-keyboard-coding-system 'utf-8) ; pretty
 (set-selection-coding-system 'utf-8) ; please
 (prefer-coding-system 'utf-8) ; with sugar on top
-
+(print mark-active)
 (use-package multiple-cursors)
 (require 'multiple-cursors-core)
+(require 'mc-cycle-cursors)
+(define-key mc/keymap (kbd "<return>") nil)
+(define-key mc/keymap (kbd "<escape>") 'keyboard-escape-quit)
+(defun my-mc-mark-next-symbol ()
+  (interactive)
+  (if mark-active
+      (progn
+        (mc/mark-next-like-this-symbol 1)
+        (message "%s" (mc/furthest-cursor-after-point))
+        (message "%s" (window-end))
+        (while (> (overlay-start (mc/furthest-cursor-after-point)) (window-end)) (mc/cycle-forward)))
+    (progn
+      (mc--mark-symbol-at-point)
+      (setq transient-mark-mode (cons 'only transient-mark-mode)))))
 
+(global-set-key (kbd "C-d") 'my-mc-mark-next-symbol)
 
 
 (global-auto-revert-mode)
-(setq-default indent-tabs-mode nil)
+(setq-default32 indent-tabs-mode nil)
