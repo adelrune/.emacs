@@ -608,7 +608,8 @@ Version 2017-11-01"
 (require 'multiple-cursors-core)
 (require 'mc-cycle-cursors)
 (define-key mc/keymap (kbd "<return>") nil)
-(define-key mc/keymap (kbd "<escape>") 'keyboard-escape-quit)
+;; Exit mc mode on <escape>
+(define-key mc/keymap (kbd "<escape>") 'multiple-cursors-mode)
 (defun my-mc-mark-next-symbol ()
   (interactive)
   (if mark-active
