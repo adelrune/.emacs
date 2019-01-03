@@ -1,5 +1,5 @@
 (require 'package)
-(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+(setq package-archives '2(("gnu" . "https://elpa.gnu.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("melpa" . "https://melpa.org/packages/")))
 
@@ -23,8 +23,8 @@
   (global-auto-complete-mode t)
   (setq ac-sources '(ac-source-words-in-all-buffer))
   (setq ac-disable-faces nil)
-
-  (setq ac-auto-show-menu    0.3)
+  (setq
+  (setq ac-auto-show-menu    0.05)
   (setq ac-delay             0.3)
   (setq ac-menu-height       20)
   (setq ac-auto-start t)
@@ -543,7 +543,7 @@ Version 2017-11-01"
           (delete-region (point) (line-beginning-position))
         (delete-region (point) final-char-point)
         ))))
-
+(setq-default cursor-type 'bar)
 (defun my-backward-kill-symbol ()
   (interactive)
   (let
@@ -621,7 +621,7 @@ Version 2017-11-01"
       (setq transient-mark-mode (cons 'only transient-mark-mode)))))
 
 (global-set-key (kbd "C-d") 'my-mc-mark-next-symbol)
-
+(global-set-key (kbd "C-S-a") 'my-mc-mark-all-like-this-symbol)
 
 (global-auto-revert-mode)
-(setq-default32 indent-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
