@@ -54,6 +54,8 @@
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 
+(use-package company-tern)
+(add-to-list 'company-backends 'company-tern)
 ;; smooth scrolling and visual fluffy stuff
 (use-package sublimity)
 ;; (require 'sublimity-scroll)
