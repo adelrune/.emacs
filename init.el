@@ -1,5 +1,5 @@
 (require 'package)
-(setq package-archives '2(("gnu" . "https://elpa.gnu.org/packages/")
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("melpa" . "https://melpa.org/packages/")))
 
@@ -18,17 +18,41 @@
 (use-package dired-hacks-utils)
 (use-package magit)
 
-(use-package auto-complete
+;; (use-package auto-complete
+;;   :config
+;;   (global-auto-complete-mode t)
+;;   (setq ac-sources '(ac-source-words-in-all-buffer))
+;;   (setq ac-disable-faces nil)
+;;   (setq ac-auto-show-menu    0.3)
+;;   (setq ac-delay             0.3)
+;;   (setq ac-menu-height       20)
+;;   (setq ac-auto-start t)
+;;   (setq ac-show-menu-immediately-on-auto-complete t))
+
+(use-package company
+  :init
+  (global-company-mode)
   :config
-  (global-auto-complete-mode t)
-  (setq ac-sources '(ac-source-words-in-all-buffer))
-  (setq ac-disable-faces nil)
-  (setq
-  (setq ac-auto-show-menu    0.05)
-  (setq ac-delay             0.3)
-  (setq ac-menu-height       20)
-  (setq ac-auto-start t)
-  (setq ac-show-menu-immediately-on-auto-complete t))
+  (setq company-idle-delay 0.03))
+
+(use-package company-quickhelp
+  :config
+  (company-quickhelp-mode 1))
+
+(let ((map company-active-map))
+  (define-key map (kbd "<tab>") 'company-complete-selection)
+  (define-key map (kbd "RET") 'nil)
+  (define-key map (kbd "<escape>") 'company-abort)
+  (accessible-keymaps company-active-map))
+(use-package jedi-core
+  :config
+  (setq jedi:environment-virtualenv (list "virtualenv" "--system-site-package" "--quiet" "--python=python3")))
+
+(use-package company-jedi)
+(defun my/python-mode-hook ()
+  (add-to-list 'company-backends 'company-jedi))
+
+(add-hook 'python-mode-hook 'my/python-mode-hook)
 
 ;; smooth scrolling and visual fluffy stuff
 (use-package sublimity)
@@ -37,10 +61,7 @@
 ;;       sublimity-scroll-drift-length 10)
 (sublimity-mode 1)
 (setq scroll-conservatively 10000)
-
-(use-package anaconda-mode)
-(add-hook 'python-mode-hook 'anaconda-mode)
-(add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+(print python-environment-virtualenv)
 ;; (use-package minimap)
 ;; (setq minimap-window-location 'right)
 
@@ -99,13 +120,11 @@ or go back to just one window (by deleting all but the selected window)."
 (global-set-key (kbd "C-<prior>") 'previous-buffer)
 (global-set-key (kbd "C-<next>") 'next-buffer)
 
+
 (use-package git-gutter
   :ensure t
   :when window-system
   :defer t
-  :bind (("C-x P" . git-gutter:previous-hunk)
-         ("C-x N" . git-gutter:next-hunk)
-         ("C-c G" . git-gutter:popup-hunk))
   :diminish ""
   :init
   (add-hook 'prog-mode-hook #'git-gutter-mode)
@@ -135,7 +154,9 @@ or go back to just one window (by deleting all but the selected window)."
   :bind
   (("M-x" . helm-M-x)
    ("C-o" . helm-find-files)
-   ("C-S-v" . 'helm-show-kill-ring))
+   ("C-S-v" . 'helm-show-kill-ring)
+   ("C-f" . 'helm-occur-from-isearch)
+   )
   :config
   (setq-default helm-M-x-fuzzy-match t)
   (progn
@@ -311,6 +332,12 @@ That is, a string used to represent it on the tab bar."
 ;;(add-hook 'after-revert-hook 'ztl-modification-state-change)
 (add-hook 'first-change-hook 'ztl-on-buffer-modification)
 
+(use-package yasnippet
+  :config
+  :init
+  (yas-global-mode 1)
+  )
+
 (use-package projectile
   :ensure t
   :config
@@ -322,7 +349,16 @@ That is, a string used to represent it on the tab bar."
   (helm-projectile-on)
   :bind
   ("C-M-p" . helm-projectile-switch-project)
-  ("C-p" . helm-projectile-find-file))
+  ("C-p" . helm-projectile-find-file)
+  ("C-S-f" . helm-projectile-grep))
+
+
+(use-package helm-flx)
+(helm-flx-mode 1)
+
+(use-package helm-fuzzier)
+(helm-fuzzier-mode 1)
+
 
 (use-package vscode-icon
   :ensure t
@@ -464,7 +500,8 @@ Version 2017-11-01"
 (global-subword-mode 1)
 ;;Higher order function would be nice but I can't be bothered to learn elisp
 ;; TODO : make this part less dumb
-(defun my-forward-word ()
+(
+ defun my-forward-word ()
   (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
         ((looking-at "\\W+\n") (end-of-line))
@@ -594,6 +631,27 @@ Version 2017-11-01"
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(use-package smart-tab
+  :init (global-smart-tab-mode 1))
+
+
+(defun add-emmet-expand-to-smart-tab-completions ()
+  ;; Add an entry for current major mode in
+  ;; `smart-tab-completion-functions-alist' to use
+  ;; `emmet-expand-line'.
+  (add-to-list 'smart-tab-completion-functions-alist
+               (cons major-mode #'emmet-expand-line)))
+(add-emmet-expand-to-smart-tab-completions)
+
+(use-package emmet-mode)
+(add-hook 'sgml-mode-hook 'emmet-mode)
+(add-hook 'sgml-mode-hook 'add-emmet-expand-to-smart-tab-completions)
+(add-hook 'css-mode-hook 'emmet-mode)
+(add-hook 'css-mode-hook 'add-emmet-expand-to-smart-tab-completions)
+(add-hook 'emmet-mode-hook (lambda () (setq emmet-indentation 2)))
+(setq emmet-move-cursor-between-quotes t)
+
 
 
 ;; thanks emacs rocks person
