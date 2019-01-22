@@ -29,6 +29,13 @@
 ;;   (setq ac-auto-start t)
 ;;   (setq ac-show-menu-immediately-on-auto-complete t))
 
+;; new file new file new file
+(global-set-key (kbd "C-n")
+                (lambda ()
+                  (interactive)
+                  (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999)))))))
+
+
 (use-package company
   :init
   (global-company-mode)
