@@ -35,6 +35,33 @@
                   (interactive)
                   (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999)))))))
 
+(setq python-shell-interpreter "ipython" python-shell-interpreter-args "-i")
+
+(defun ansi-term (program &optional new-buffer-name)
+  (interactive (list (read-from-minibuffer "Run program: "
+					   (or explicit-shell-file-name
+					       (getenv "ESHELL")
+					       shell-file-name))))
+  (setq term-ansi-buffer-name
+	(if new-buffer-name
+	    new-buffer-name
+	  (if term-ansi-buffer-base-name
+	      (if (eq term-ansi-buffer-base-name t)
+		  (file-name-nondirectory program)
+		term-ansi-buffer-base-name)
+	    "ansi-term")))
+  (setq term-ansi-buffer-name (concat "*" term-ansi-buffer-name "*"))
+  (setq term-ansi-buffer-name (generate-new-buffer-name term-ansi-buffer-name))
+  (setq term-ansi-buffer-name (term-ansi-make-term term-ansi-buffer-name program))
+  (set-buffer term-ansi-buffer-name)
+  (term-mode)
+  (term-char-mode)
+  (let (term-escape-char)
+    (term-set-escape-char ?\C-x))
+  (pop-to-buffer (get-buffer term-ansi-buffer-name)))
+
+
+
 
 (use-package company
   :init
@@ -116,7 +143,13 @@ or go back to just one window (by deleting all but the selected window)."
      (bury-buffer))))
 
 
-(global-set-key (kbd "C-S-s") 'isearch-forward)
+(defun adelrune/save-as ()
+  (interactive)
+  (progn
+    (set-visited-file-name (read-file-name "Save as :"))
+    (save-buffer)
+  ))
+(global-set-key (kbd "C-S-s") 'adelrune/save-as)
 (global-set-key (kbd "C-s") 'save-buffer)
 (global-set-key (kbd "C-q") 'beginning-of-line-text)
 (global-set-key (kbd "C-z") 'undo)
