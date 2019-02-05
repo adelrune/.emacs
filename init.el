@@ -78,15 +78,13 @@
   (define-key map (kbd "RET") 'nil)
   (define-key map (kbd "<escape>") 'company-abort)
   (accessible-keymaps company-active-map))
+
 (use-package jedi-core
   :config
   (setq jedi:environment-virtualenv (list "virtualenv" "--system-site-package" "--quiet" "--python=python3")))
 
 (use-package company-jedi)
-(defun my/python-mode-hook ()
-  (add-to-list 'company-backends 'company-jedi))
-
-(add-hook 'python-mode-hook 'my/python-mode-hook)
+(add-to-list 'company-backends 'company-jedi)
 
 (use-package company-tern)
 (add-to-list 'company-backends 'company-tern)
@@ -165,15 +163,25 @@ or go back to just one window (by deleting all but the selected window)."
 (global-set-key (kbd "C-<next>") 'next-buffer)
 
 
+(use-package dumb-jump
+  :bind ("C-r" . dumb-jump-go)
+         ("C-S-r" . dumb-jump-back)
+  :config (setq dumb-jump-selector 'helm)
+  :ensure)
+
+
 (use-package git-gutter
   :ensure t
   :when window-system
   :defer t
   :diminish ""
+  :bind
+  ("C-k g" . git-gutter:next-hunk)
   :init
   (add-hook 'prog-mode-hook #'git-gutter-mode)
   (add-hook 'text-mode-hook #'git-gutter-mode)
   :config
+  (add-hook 'after-save-hook 'git-gutter)
   (use-package git-gutter-fringe
     :ensure t
     :init
@@ -522,14 +530,12 @@ Version 2017-11-01"
     $buf
     ))
 
-
-
-(use-package idle-highlight-in-visible-buffers-mode
+(use-package highlight-symbol
   :config
-  (set-face-attribute 'idle-highlight-in-visible-buffers nil :weight 'bold :background "Purple4")
-  (add-hook 'prog-mode-hook 'idle-highlight-in-visible-buffers-mode)
+  (setq highlight-symbol-idle-delay 0.01)
+  (add-hook 'prog-mode-hook 'highlight-symbol-mode)
+  :bind ("C-S-d" . highlight-symbol-next)
   )
-
 
 ;; TODO : fix this.
 (defun good-comment ()
@@ -789,6 +795,11 @@ region, of N lines. Down if N is positive, up if is negative"
       (set-mark (+ (point) (- region-start region-end)))
       (if swap-point-mark
           (exchange-point-and-mark)))))
+
+(use-package visual-regexp)
+
+(use-package visual-regexp-steroids)
+  ;:bind ("C-r" . 'vr/query-replace))
 
 (defun move-lines-up (n)
   "Moves the current line or, if region is actives, the lines surrounding
