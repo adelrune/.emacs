@@ -60,9 +60,6 @@
     (term-set-escape-char ?\C-x))
   (pop-to-buffer (get-buffer term-ansi-buffer-name)))
 
-
-
-
 (use-package company
   :init
   (global-company-mode)
@@ -163,11 +160,24 @@ or go back to just one window (by deleting all but the selected window)."
 (global-set-key (kbd "C-<next>") 'next-buffer)
 
 
+(defun adelrune/dumb-jump-go-flash ()
+  (interactive)
+  (progn
+    (dumb-jump-go)
+    (pulse-momentary-highlight-one-line (point))))
+
+(defun adelrune/dumb-jump-back-flash ()
+  (interactive)
+  (progn
+    (dumb-jump-back)
+    (pulse-momentary-highlight-one-line (point))))
+
 (use-package dumb-jump
-  :bind ("C-r" . dumb-jump-go)
-         ("C-S-r" . dumb-jump-back)
+  :bind ("C-r" . adelrune/dumb-jump-go-flash)
+         ("C-S-r" . adelrune/dumb-jump-back-flash)
   :config (setq dumb-jump-selector 'helm)
   :ensure)
+
 
 
 (use-package git-gutter
@@ -207,7 +217,6 @@ or go back to just one window (by deleting all but the selected window)."
   (("M-x" . helm-M-x)
    ("C-o" . helm-find-files)
    ("C-S-v" . 'helm-show-kill-ring)
-   ("C-f" . 'helm-occur-from-isearch)
    )
   :config
   (setq-default helm-M-x-fuzzy-match t)
@@ -221,7 +230,12 @@ or go back to just one window (by deleting all but the selected window)."
           helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
           helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
           helm-ff-file-name-history-use-recentf t)))
-(use-package helm-swoop)
+
+(use-package ivy
+  :bind
+  ("C-f" . swiper))
+
+
 ;(global-set-key (kbd "M-x") 'execute-extended-command)
 
 
@@ -384,6 +398,22 @@ That is, a string used to represent it on the tab bar."
 ;;(add-hook 'after-revert-hook 'ztl-modification-state-change)
 (add-hook 'first-change-hook 'ztl-on-buffer-modification)
 
+(defun adelrune/avy-goto-char-timer-flash ()
+  (interactive)
+  (progn
+  (avy-goto-char-timer)
+  (pulse-momentary-highlight-one-line (point))))
+
+(use-package avy
+  :bind
+  ("C-SPC" . adelrune/avy-goto-char-timer-flash)
+  ("C-c l" . avy-goto-line)
+  :config
+  (setq avy-timeout-seconds 0.3)
+  )
+
+(global-set-key (kbd "C-m") 'set-mark-command)
+
 (use-package yasnippet
   :config
   :init
@@ -473,7 +503,6 @@ That is, a string used to represent it on the tab bar."
 (global-set-key (kbd "C-S-k") 'ruthlessly-kill-line)
 
 (cua-mode)
-(global-set-key (kbd "C-c") 'kill-whole-line)
 (when (display-graphic-p)
   (scroll-bar-mode -1)
   (tool-bar-mode -1))
@@ -533,10 +562,9 @@ Version 2017-11-01"
 (use-package highlight-symbol
   :config
   (setq highlight-symbol-idle-delay 0.01)
-  (add-hook 'prog-mode-hook 'highlight-symbol-mode)
   :bind ("C-S-d" . highlight-symbol-next)
   )
-
+(add-hook 'prog-mode-hook 'highlight-symbol-mode)
 ;; TODO : fix this.
 (defun good-comment ()
   (interactive)
