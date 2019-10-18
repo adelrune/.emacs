@@ -172,10 +172,14 @@ or go back to just one window (by deleting all but the selected window)."
   (progn
     (set-visited-file-name (read-file-name "Save as :"))
     (save-buffer)
-  ))
+    ))
+
+(defun adelrune/begin-line ()
+  (interactive "^")
+  (beginning-of-line-text))
 (bind-key* "C-S-s" 'adelrune/save-as)
 (bind-key* "C-s" 'save-buffer)
-(bind-key* "C-q" 'beginning-of-line-text)
+(bind-key* "C-q" 'adelrune/begin-line)
 (bind-key* "C-z" 'undo)
 (bind-key* "C-S-z" 'redo)
 (bind-key* "C-y" 'redo)
@@ -603,7 +607,7 @@ Version 2017-11-01"
                      (:background "gray90"))))
 (add-hook 'prog-mode-hook 'highlight-symbol-mode)
 ;; TODO : fix this.
-(defun good-comment ()
+(defun adelrune/good-comment ()
   (interactive)
   (progn
     (if (and (eq (char-before) 10) (looking-at "[:blank:]*\n"))
@@ -611,19 +615,19 @@ Version 2017-11-01"
         (comment-dwim nil))
       (save-excursion (comment-line 1)))))
 
-(bind-key* "C-M-c" 'good-comment)
+(bind-key* "C-M-c" 'adelrune/good-comment)
 
 ;; All of this shit is to simulate sublime's way of dealing with shift
 (global-subword-mode 1)
 ;;Higher order function would be nice but I can't be bothered to learn elisp
 ;; TODO : make this part less dumb
-( defun my-forward-word ()
+(defun adelrune/forward-word ()
   (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
         ((looking-at "\\W+\n") (end-of-line))
         (t (forward-word))))
 
-(defun my-forward-symbol ()
+(defun adelrune/forward-symbol ()
   (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
         ((looking-at "\\W+\n") (end-of-line))
@@ -631,7 +635,7 @@ Version 2017-11-01"
 
 ;; (interactive "^") means "please emacs deal with shift correctly.
 
-(defun my-forward-kill-word ()
+(defun adelrune/forward-kill-word ()
   (interactive)
   (cond ((eq (char-after) 10) (delete-forward-char 1))
         ((looking-at "\\W+\n") (delete-region (point) (line-end-position)))
@@ -640,7 +644,7 @@ Version 2017-11-01"
                              (setq final-char-point (point)))
              (delete-region (point) final-char-point)))))
 
-(defun my-forward-kill-symbol ()
+(defun adelrune/forward-kill-symbol ()
   (interactive)
   (cond ((eq (char-after) 10) (delete-forward-char 1))
         ((looking-at "\\W+\n") (delete-region (point) (line-end-position)))
@@ -649,7 +653,7 @@ Version 2017-11-01"
                              (setq final-char-point (point)))
              (delete-region (point) final-char-point)))))
 
-(defun my-backward-word ()
+(defun adelrune/backward-word ()
   (interactive "^")
   (let
       ((crossed-a-line nil)
@@ -664,7 +668,7 @@ Version 2017-11-01"
           (beginning-of-line)
         (backward-word)))))
 
-(defun my-backward-symbol ()
+(defun adelrune/backward-symbol ()
   (interactive "^")
   (let
       ((crossed-a-line nil)
@@ -679,7 +683,7 @@ Version 2017-11-01"
           (beginning-of-line)
         (forward-symbol -1)))))
 
-(defun my-backward-kill-word ()
+(defun adelrune/backward-kill-word ()
   (interactive)
   (let
       ((crossed-a-line nil)
@@ -697,7 +701,7 @@ Version 2017-11-01"
         (delete-region (point) final-char-point)
         ))))
 (setq-default cursor-type 'bar)
-(defun my-backward-kill-symbol ()
+(defun adelrune/backward-kill-symbol ()
   (interactive)
   (let
       ((crossed-a-line nil)
@@ -717,18 +721,18 @@ Version 2017-11-01"
   ;; (cond ((eq (char-before) 10) (left-char 1))
   ;;    ((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
   ;;    (t (backward-word))))
-(bind-key* "C-<backspace>" 'my-backward-kill-symbol)
-(bind-key* "C-<right>" 'my-forward-symbol)
-(bind-key* "C-<left>" 'my-backward-symbol)
-(bind-key* "C-<delete>" 'my-forward-kill-symbol)
-(bind-key* "M-<backspace>" 'my-backward-kill-word)
-(bind-key* "M-<right>" 'my-forward-word)
-(bind-key* "M-<left>" 'my-backward-word)
-(bind-key* "M-<delete>" 'my-forward-kill-word)
-(defun my-next-win ()
+(bind-key* "C-<backspace>" 'adelrune/backward-kill-symbol)
+(bind-key* "C-<right>" 'adelrune/forward-symbol)
+(bind-key* "C-<left>" 'adelrune/backward-symbol)
+(bind-key* "C-<delete>" 'adelrune/forward-kill-symbol)
+(bind-key* "M-<backspace>" 'adelrune/backward-kill-word)
+(bind-key* "M-<right>" 'adelrune/forward-word)
+(bind-key* "M-<left>" 'adelrune/backward-word)
+(bind-key* "M-<delete>" 'adelrune/forward-kill-word)
+(defun adelrune/next-win ()
     (interactive)
   (other-window 1))
-(defun my-previous-win ()
+(defun adelrune/previous-win ()
     (interactive)
   (other-window -1))
 (bind-key* "C-M-<prior>" 'my-previous-win)
