@@ -2,6 +2,7 @@
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("melpa" . "https://melpa.org/packages/")))
+(require 'bind-key)
 
 (setq tls-checktrust nil)
 (setq gnutls-verify-error nil)
@@ -13,10 +14,20 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 (load-library "use-package")
-(package-refresh-contents)
+;;(package-refresh-contents)
 (setq use-package-always-ensure t)
 (use-package dired-hacks-utils)
 (use-package magit)
+
+(defun adelrune/expand-dong ()
+  (interactive)
+  (progn
+    (er/expand-region 1)
+    (setq transient-mark-mode (cons 'only transient-mark-mode))
+    ))
+
+(use-package expand-region
+  :bind ("C-=" . 'adelrune/expand-dong))
 
 ;; (use-package auto-complete
 ;;   :config
@@ -30,10 +41,7 @@
 ;;   (setq ac-show-menu-immediately-on-auto-complete t))
 
 ;; new file new file new file
-(global-set-key (kbd "C-n")
-                (lambda ()
-                  (interactive)
-                  (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999)))))))
+
 
 (setq python-shell-interpreter "ipython" python-shell-interpreter-args "-i")
 
@@ -60,6 +68,8 @@
     (term-set-escape-char ?\C-x))
   (pop-to-buffer (get-buffer term-ansi-buffer-name)))
 
+;; completion stuff
+
 (use-package company
   :init
   (global-company-mode)
@@ -75,6 +85,17 @@
   (define-key map (kbd "RET") 'nil)
   (define-key map (kbd "<escape>") 'company-abort)
   (accessible-keymaps company-active-map))
+
+(use-package irony
+  :config
+  (add-hook 'c++-mode-hook 'irony-mode)
+  (add-hook 'c-mode-hook 'irony-mode)
+  (add-hook 'objc-mode-hook 'irony-mode)
+
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+  )
+
+(use-package processing-mode)
 
 (use-package jedi-core
   :config
@@ -112,8 +133,7 @@
 (set-face-attribute 'default nil :height 80)
 
 ;;sane escape mode
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-(global-set-key (kbd "C-g") 'goto-line)
+
 
 (defun keyboard-escape-quit ()
   "Exit the current \"mode\" (in a generalized sense of the word).
@@ -137,6 +157,15 @@ or go back to just one window (by deleting all but the selected window)."
     ((string-match "^ \\*" (buffer-name (current-buffer)))
      (bury-buffer))))
 
+(defun adelrune/kb-escape-quit ()
+  (interactive)
+  (progn
+    (if multiple-cursors-mode
+        (multiple-cursors-mode 0)
+    (keyboard-escape-quit))))
+
+(bind-key* "<escape>" 'adelrune/kb-escape-quit)
+(bind-key* "C-g" 'goto-line)
 
 (defun adelrune/save-as ()
   (interactive)
@@ -144,20 +173,19 @@ or go back to just one window (by deleting all but the selected window)."
     (set-visited-file-name (read-file-name "Save as :"))
     (save-buffer)
   ))
-(global-set-key (kbd "C-S-s") 'adelrune/save-as)
-(global-set-key (kbd "C-s") 'save-buffer)
-(global-set-key (kbd "C-q") 'beginning-of-line-text)
-(global-set-key (kbd "C-z") 'undo)
-(global-set-key (kbd "C-S-z") 'redo)
-(global-set-key (kbd "C-y") 'redo)
-(global-set-key (kbd "C-a") 'mark-whole-buffer)
-(global-set-key (kbd "C-w") 'kill-buffer)
-;;(global-set-key (kbd "C-S-o") 'helm-buffers-list)
-(global-set-key (kbd "C-o") 'find-file)
-(global-set-key (kbd "M-n") 'next-buffer)
-(global-set-key (kbd "M-p") 'previous-buffer)
-(global-set-key (kbd "C-<prior>") 'previous-buffer)
-(global-set-key (kbd "C-<next>") 'next-buffer)
+(bind-key* "C-S-s" 'adelrune/save-as)
+(bind-key* "C-s" 'save-buffer)
+(bind-key* "C-q" 'beginning-of-line-text)
+(bind-key* "C-z" 'undo)
+(bind-key* "C-S-z" 'redo)
+(bind-key* "C-y" 'redo)
+(bind-key* "C-a" 'mark-whole-buffer)
+(bind-key* "C-w" 'kill-buffer)
+;;(bind-key* "C-S-o" 'helm-buffers-list)
+(bind-key* "M-n" 'next-buffer)
+(bind-key* "M-p" 'previous-buffer)
+(bind-key* "C-<prior>" 'previous-buffer)
+(bind-key* "C-<next>" 'next-buffer)
 
 
 (defun adelrune/dumb-jump-go-flash ()
@@ -178,7 +206,8 @@ or go back to just one window (by deleting all but the selected window)."
   :config (setq dumb-jump-selector 'helm)
   :ensure)
 
-
+(define-prefix-command 'sidebar-keymap)
+(global-set-key (kbd "C-k") 'sidebar-keymap)
 
 (use-package git-gutter
   :ensure t
@@ -230,19 +259,19 @@ or go back to just one window (by deleting all but the selected window)."
           helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
           helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
           helm-ff-file-name-history-use-recentf t)))
-
-(use-package ivy
-  :bind
+(use-package ivy)
+(use-package swiper
+    :bind
   ("C-f" . swiper))
 
 
-;(global-set-key (kbd "M-x") 'execute-extended-command)
+;(bind-key* "M-x" 'execute-extended-command)
 
 
 (use-package tabbar)
 (tabbar-mode 1)
-(global-set-key (kbd "C-<prior>") 'tabbar-backward-tab)
-(global-set-key (kbd "C-<next>") 'tabbar-forward-tab)
+(bind-key* "C-<prior>" 'tabbar-backward-tab)
+(bind-key* "C-<next>" 'tabbar-forward-tab)
 
 (defun tabbar-move-current-tab-one-place-left ()
   "Move current tab one place left, unless it's already the leftmost."
@@ -299,9 +328,9 @@ or go back to just one window (by deleting all but the selected window)."
     (tabbar-display-update)))
 
 
-(global-set-key (kbd "C-S-<prior>") 'tabbar-move-current-tab-one-place-left)
-(global-set-key (kbd "C-S-<next>") 'tabbar-move-current-tab-one-place-right)
-(global-set-key (kbd "C-w") 'kill-current-buffer)
+(bind-key* "C-S-<prior>" 'tabbar-move-current-tab-one-place-left)
+(bind-key* "C-S-<next>" 'tabbar-move-current-tab-one-place-right)
+(bind-key* "C-w" 'kill-current-buffer)
 
 ;; Add a buffer modification state indicator in the tab label, and place a
 ;; space around the label to make it looks less crowd.c
@@ -376,7 +405,7 @@ or go back to just one window (by deleting all but the selected window)."
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -404,6 +433,11 @@ That is, a string used to represent it on the tab bar."
   (avy-goto-char-timer)
   (pulse-momentary-highlight-one-line (point))))
 
+(use-package racer)
+(add-hook 'rust-mode-hook #'racer-mode)
+(add-hook 'racer-mode-hook #'eldoc-mode)
+(add-hook 'racer-mode-hook #'company-mode)
+
 (use-package avy
   :bind
   ("C-SPC" . adelrune/avy-goto-char-timer-flash)
@@ -411,8 +445,6 @@ That is, a string used to represent it on the tab bar."
   :config
   (setq avy-timeout-seconds 0.3)
   )
-
-(global-set-key (kbd "C-m") 'set-mark-command)
 
 (use-package yasnippet
   :config
@@ -446,8 +478,7 @@ That is, a string used to represent it on the tab bar."
   :ensure t
   :commands (vscode-icon-for-file))
 
-(define-prefix-command 'sidebar-keymap)
-(global-set-key (kbd "C-k") 'sidebar-keymap)
+
 
 (use-package dired-sidebar
   :bind (("C-k C-b" . dired-sidebar-toggle-sidebar))
@@ -500,7 +531,7 @@ That is, a string used to represent it on the tab bar."
   (move-beginning-of-line 1)
   (kill-line 1)
   (setq kill-ring (cdr kill-ring)))
-(global-set-key (kbd "C-S-k") 'ruthlessly-kill-line)
+(bind-key* "C-S-k" 'ruthlessly-kill-line)
 
 (cua-mode)
 (when (display-graphic-p)
@@ -543,7 +574,7 @@ That is, a string used to represent it on the tab bar."
   (interactive)
   (when killed-file-list
     (find-file (pop killed-file-list))))
-(global-set-key (kbd "C-S-t") 'reopen-killed-file)
+(bind-key* "C-S-t" 'reopen-killed-file)
 
 (use-package open-junk-file)
 
@@ -561,9 +592,15 @@ Version 2017-11-01"
 
 (use-package highlight-symbol
   :config
-  (setq highlight-symbol-idle-delay 0.01)
-  :bind ("C-S-d" . highlight-symbol-next)
+   (setq highlight-symbol-idle-delay 0.01)
+   :bind ("C-S-d" . highlight-symbol-next)
   )
+(highlight-symbol-mode)
+(face-spec-set 'highlight-symbol-face
+                  '((((class color) (background dark))
+                     (:background "#346"))
+                    (((class color) (background light))
+                     (:background "gray90"))))
 (add-hook 'prog-mode-hook 'highlight-symbol-mode)
 ;; TODO : fix this.
 (defun good-comment ()
@@ -574,14 +611,13 @@ Version 2017-11-01"
         (comment-dwim nil))
       (save-excursion (comment-line 1)))))
 
-(global-set-key (kbd "C-M-c") 'good-comment)
+(bind-key* "C-M-c" 'good-comment)
 
 ;; All of this shit is to simulate sublime's way of dealing with shift
 (global-subword-mode 1)
 ;;Higher order function would be nice but I can't be bothered to learn elisp
 ;; TODO : make this part less dumb
-(
- defun my-forward-word ()
+( defun my-forward-word ()
   (interactive "^")
   (cond ((eq (char-after) 10) (right-char 1))
         ((looking-at "\\W+\n") (end-of-line))
@@ -681,22 +717,22 @@ Version 2017-11-01"
   ;; (cond ((eq (char-before) 10) (left-char 1))
   ;;    ((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
   ;;    (t (backward-word))))
-(global-set-key (kbd "C-<backspace>") 'my-backward-kill-symbol)
-(global-set-key (kbd "C-<right>") 'my-forward-symbol)
-(global-set-key (kbd "C-<left>") 'my-backward-symbol)
-(global-set-key (kbd "C-<delete>") 'my-forward-kill-symbol)
-(global-set-key (kbd "M-<backspace>") 'my-backward-kill-word)
-(global-set-key (kbd "M-<right>") 'my-forward-word)
-(global-set-key (kbd "M-<left>") 'my-backward-word)
-(global-set-key (kbd "M-<delete>") 'my-forward-kill-word)
+(bind-key* "C-<backspace>" 'my-backward-kill-symbol)
+(bind-key* "C-<right>" 'my-forward-symbol)
+(bind-key* "C-<left>" 'my-backward-symbol)
+(bind-key* "C-<delete>" 'my-forward-kill-symbol)
+(bind-key* "M-<backspace>" 'my-backward-kill-word)
+(bind-key* "M-<right>" 'my-forward-word)
+(bind-key* "M-<left>" 'my-backward-word)
+(bind-key* "M-<delete>" 'my-forward-kill-word)
 (defun my-next-win ()
     (interactive)
   (other-window 1))
 (defun my-previous-win ()
     (interactive)
   (other-window -1))
-(global-set-key (kbd "C-M-<prior>") 'my-previous-win)
-(global-set-key (kbd "C-M-<next>") 'my-next-win)
+(bind-key* "C-M-<prior>" 'my-previous-win)
+(bind-key* "C-M-<next>" 'my-next-win)
 
 (use-package markdown-mode
   :ensure t
@@ -732,8 +768,6 @@ Version 2017-11-01"
 (add-hook 'emmet-mode-hook (lambda () (setq emmet-indentation 2)))
 (setq emmet-move-cursor-between-quotes t)
 
-
-
 ;; thanks emacs rocks person
 ;; UTF-8 please
 (setq locale-coding-system 'utf-8) ; pretty
@@ -745,10 +779,25 @@ Version 2017-11-01"
 (use-package multiple-cursors)
 (require 'multiple-cursors-core)
 (require 'mc-cycle-cursors)
+
+(defvar multiple-cursors-mode-enabled-hook nil)
+(defvar multiple-cursors-mode-disabled-hook nil)
+
+(defun on-mc ()
+  (cua-mode 0)
+  (define-key mc/keymap (kbd "C-c") 'kill-ring-save)
+  (define-key mc/keymap (kbd "C-v") 'yank)
+  (define-key mc/keymap (kbd "C-x") 'kill-region))
+(defun off-mc ()
+  (cua-mode 1))
+
+(add-hook 'multiple-cursors-mode-enabled-hook #'on-mc)
+(add-hook 'multiple-cursors-mode-disabled-hook #'off-mc)
+
 (define-key mc/keymap (kbd "<return>") nil)
 ;; Exit mc mode on <escape>
 (define-key mc/keymap (kbd "<escape>") 'multiple-cursors-mode)
-(defun my-mc-mark-next-symbol ()
+(defun adelrune/mc-mark-next-symbol ()
   (interactive)
   (if mark-active
       (progn
@@ -758,8 +807,13 @@ Version 2017-11-01"
       (mc--mark-symbol-at-point)
       (setq transient-mark-mode (cons 'only transient-mark-mode)))))
 
-(global-set-key (kbd "C-d") 'my-mc-mark-next-symbol)
-(global-set-key (kbd "C-S-a") 'my-mc-mark-all-like-this-symbol)
+(bind-key* "C-d" 'adelrune/mc-mark-next-symbol)
+;; java mode tabarnak
+(defun on-java-loaded ()
+  (define-key java-mode-mapjava-mode-map (kbd "C-d") 'adelrune/mc-mark-next-symbol))
+(add-hook 'java-mode-hook 'on-java-loaded)
+
+(bind-key* "C-S-a" 'my-mc-mark-all-like-this-symbol)
 
 (global-auto-revert-mode)
 (setq-default indent-tabs-mode nil)
@@ -826,8 +880,18 @@ region, of N lines. Down if N is positive, up if is negative"
 
 (use-package visual-regexp)
 
-(use-package visual-regexp-steroids)
-  ;:bind ("C-r" . 'vr/query-replace))
+(use-package visual-regexp-steroids
+  :bind ("C-c r" . 'vr/query-replace))
+
+
+(defun adelrune/new-file ()
+                  (interactive)
+                  (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999))))))
+
+(bind-key* "C-n" 'adelrune/new-file)
+
+(use-package rust-mode)
+(define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
 
 (defun move-lines-up (n)
   "Moves the current line or, if region is actives, the lines surrounding
@@ -848,8 +912,8 @@ region, down by N lines, or 1 line if N is nil."
 (defun move-lines-binding ()
   "Sets the default key binding for moving lines. M-p or M-<up> for moving up
 and M-n or M-<down> for moving down."
-  (global-set-key (kbd "M-p") 'move-lines-up)
-  (global-set-key (kbd "M-<up>") 'move-lines-up)
-  (global-set-key (kbd "M-n") 'move-lines-down)
-  (global-set-key (kbd "M-<down>") 'move-lines-down))
+  (bind-key* "M-p" 'move-lines-up)
+  (bind-key* "M-<up>" 'move-lines-up)
+  (bind-key* "M-n" 'move-lines-down)
+  (bind-key* "M-<down>" 'move-lines-down))
 (move-lines-binding)
