@@ -358,7 +358,7 @@ or go back to just one window (by deleting all but the selected window)."
   (ztl-modification-state-change))
 (add-hook 'after-save-hook 'ztl-modification-state-change)
 
-(defun my-tabbar-buffer-groups () ;; customize to show all normal files in one group
+(defun adelrune/tabbar-buffer-groups () ;; customize to show all normal files in one group
   "Returns the name of the tab group names the current buffer belongs to.
     There are two groups: Emacs buffers (those whose name starts with '*', plus
     dired buffers), and the rest.  This works at least with Emacs v24.2 using
@@ -368,7 +368,7 @@ or go back to just one window (by deleting all but the selected window)."
               ((eq major-mode 'dired-mode) "emacs")
               (t "user"))))
 
-(setq tabbar-buffer-groups-function 'my-tabbar-buffer-groups)
+(setq tabbar-buffer-groups-function 'adelrune/tabbar-buffer-groups)
 
 ;aesthetic changes to tabbar mode
 (set-face-attribute
@@ -409,7 +409,7 @@ or go back to just one window (by deleting all but the selected window)."
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -455,6 +455,13 @@ That is, a string used to represent it on the tab bar."
   :init
   (yas-global-mode 1)
   )
+(use-package yasnippet-snippets)
+
+(define-key yas-minor-mode-map [tab] nil)
+(define-key yas-minor-mode-map (kbd "TAB") nil)
+
+(define-key cua-global-keymap [C-return] nil)
+(bind-key* "<C-return>" 'yas-expand)
 
 (use-package projectile
   :ensure t
@@ -735,8 +742,8 @@ Version 2017-11-01"
 (defun adelrune/previous-win ()
     (interactive)
   (other-window -1))
-(bind-key* "C-M-<prior>" 'my-previous-win)
-(bind-key* "C-M-<next>" 'my-next-win)
+(bind-key* "C-M-<prior>" 'adelrune/next-win)
+(bind-key* "C-M-<next>" 'adelrune/previous-win)
 
 (use-package markdown-mode
   :ensure t
@@ -817,7 +824,7 @@ Version 2017-11-01"
   (define-key java-mode-mapjava-mode-map (kbd "C-d") 'adelrune/mc-mark-next-symbol))
 (add-hook 'java-mode-hook 'on-java-loaded)
 
-(bind-key* "C-S-a" 'my-mc-mark-all-like-this-symbol)
+(bind-key* "C-S-a" 'mc/mark-all-dwim)
 
 (global-auto-revert-mode)
 (setq-default indent-tabs-mode nil)
