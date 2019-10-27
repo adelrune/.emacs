@@ -548,6 +548,32 @@ That is, a string used to represent it on the tab bar."
 (bind-key* "C-M-p" 'adelrune/switch-project)
 
 ;; Funky stuff
+;;thanks stackoverflow person even though I had to modify your code
+(defun apply-function-to-region-lines (fn)
+  (save-excursion
+    (goto-char (region-end))
+    (move-end-of-line 1)
+    (let ((end-marker (copy-marker (point-marker)))
+          next-line-marker)
+      (goto-char (region-beginning))
+      (move-beginning-of-line 1)
+      (setq next-line-marker (point-marker))
+      (while (< next-line-marker end-marker)
+        (let ((start nil)
+              (end nil))
+          (goto-char next-line-marker)
+          (save-excursion
+            (setq start (point))
+            (forward-line 1)
+            (set-marker next-line-marker (point))
+            (setq end (point)))
+          (save-excursion
+            (let ((mark-active nil))
+              (narrow-to-region start end)
+              (funcall fn)
+              (widen)))))
+      (set-marker end-marker nil)
+      (set-marker next-line-marker nil))))
 
 (defun ruthlessly-kill-line ()
   "Deletes a line, but does not put it in the kill-ring. (kinda)"
@@ -555,7 +581,15 @@ That is, a string used to represent it on the tab bar."
   (move-beginning-of-line 1)
   (kill-line 1)
   (setq kill-ring (cdr kill-ring)))
-(bind-key* "C-S-k" 'ruthlessly-kill-line)
+
+(defun adelrune/ruthlessly-kill-lines ()
+  (interactive)
+  (if (use-region-p)
+
+      (apply-function-to-region-lines 'ruthlessly-kill-line)
+    (ruthlessly-kill-line)))
+
+(bind-key* "C-S-k" 'adelrune/ruthlessly-kill-lines)
 
 (when (display-graphic-p)
   (scroll-bar-mode -1)
