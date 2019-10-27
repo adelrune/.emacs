@@ -1,3 +1,22 @@
+(cua-mode)
+(define-key cua-global-keymap [C-return] nil)
+(define-key cua-global-keymap (kbd "C-z") nil)
+(define-key cua--cua-keys-keymap (kbd "C-z") nil)
+
+(use-package undo-tree
+  :bind
+  ("C-z" . 'undo-tree-undo)
+  ("C-y" . 'undo-tree-redo))
+(bind-key* "C-z" 'undo-tree-undo)
+
+(setq undo-tree-enable-undo-in-region nil)
+
+(add-hook 'write-file-hooks 'delete-trailing-whitespace)
+
+(setq undo-limit 800000)
+(setq undo-strong-limit 12000000)
+(setq undo-outer-limit 120000000)
+
 (require 'package)
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
@@ -29,47 +48,9 @@
 (use-package expand-region
   :bind ("C-=" . 'adelrune/expand-dong))
 
-;; (use-package auto-complete
-;;   :config
-;;   (global-auto-complete-mode t)
-;;   (setq ac-sources '(ac-source-words-in-all-buffer))
-;;   (setq ac-disable-faces nil)
-;;   (setq ac-auto-show-menu    0.3)
-;;   (setq ac-delay             0.3)
-;;   (setq ac-menu-height       20)
-;;   (setq ac-auto-start t)
-;;   (setq ac-show-menu-immediately-on-auto-complete t))
-
-;; new file new file new file
-
-
 (setq python-shell-interpreter "ipython" python-shell-interpreter-args "-i")
 
-(defun ansi-term (program &optional new-buffer-name)
-  (interactive (list (read-from-minibuffer "Run program: "
-					   (or explicit-shell-file-name
-					       (getenv "ESHELL")
-					       shell-file-name))))
-  (setq term-ansi-buffer-name
-	(if new-buffer-name
-	    new-buffer-name
-	  (if term-ansi-buffer-base-name
-	      (if (eq term-ansi-buffer-base-name t)
-		  (file-name-nondirectory program)
-		term-ansi-buffer-base-name)
-	    "ansi-term")))
-  (setq term-ansi-buffer-name (concat "*" term-ansi-buffer-name "*"))
-  (setq term-ansi-buffer-name (generate-new-buffer-name term-ansi-buffer-name))
-  (setq term-ansi-buffer-name (term-ansi-make-term term-ansi-buffer-name program))
-  (set-buffer term-ansi-buffer-name)
-  (term-mode)
-  (term-char-mode)
-  (let (term-escape-char)
-    (term-set-escape-char ?\C-x))
-  (pop-to-buffer (get-buffer term-ansi-buffer-name)))
-
 ;; completion stuff
-
 (use-package company
   :init
   (global-company-mode)
@@ -92,8 +73,7 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode)
 
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-  )
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
 
 (use-package processing-mode)
 
@@ -108,33 +88,29 @@
 (add-to-list 'company-backends 'company-tern)
 (add-hook 'js2-mode-hook (lambda ()
                            (tern-mode)))
-;; smooth scrolling and visual fluffy stuff
 (use-package sublimity)
-;; (require 'sublimity-scroll)
-;; (setq sublimity-scroll-weight 5
-;;       sublimity-scroll-drift-length 10)
+(add-to-list 'initial-frame-alist '(font . "Fira Code-10"))
+(add-to-list 'default-frame-alist '(font . "Fira Code-10"))
 (sublimity-mode 1)
 (setq scroll-conservatively 10000)
-(print python-environment-virtualenv)
-;; (use-package minimap)
-;; (setq minimap-window-location 'right)
 
-;; (custom-set-faces
-;;   '(minimap-active-region-background
-;;     ((((background dark)) (:background "#3A3A3A222222"))
-;;       (t (:background "#D3D3D3222222")))
-;;     "Face for the active region in the minimap.
-;; By default, this is only a different background color."
-;;     :group 'minimap))
-(use-package undo-tree)
-(defalias 'redo 'undo-tree-redo)
+(use-package undo-tree
+  :bind
+  ("C-z" . 'undo-tree-undo)
+  ("C-y" . 'undo-tree-redo))
+(setq undo-tree-enable-undo-in-region nil)
 
 (add-hook 'write-file-hooks 'delete-trailing-whitespace)
-(set-face-attribute 'default nil :height 80)
 
+  ;; default in spacemacs is 80000
+  (setq undo-limit 800000)
+
+  ;; default in spacemacs is 120000
+  (setq undo-strong-limit 12000000)
+
+  ;; default in spacemacs is 12000000
+  (setq undo-outer-limit 120000000)
 ;;sane escape mode
-
-
 (defun keyboard-escape-quit ()
   "Exit the current \"mode\" (in a generalized sense of the word).
 This command can exit an interactive command such as `query-replace',
@@ -164,9 +140,6 @@ or go back to just one window (by deleting all but the selected window)."
         (multiple-cursors-mode 0)
     (keyboard-escape-quit))))
 
-(bind-key* "<escape>" 'adelrune/kb-escape-quit)
-(bind-key* "C-g" 'goto-line)
-
 (defun adelrune/save-as ()
   (interactive)
   (progn
@@ -177,15 +150,14 @@ or go back to just one window (by deleting all but the selected window)."
 (defun adelrune/begin-line ()
   (interactive "^")
   (beginning-of-line-text))
+
+(bind-key* "<escape>" 'adelrune/kb-escape-quit)
+(bind-key* "C-g" 'goto-line)
 (bind-key* "C-S-s" 'adelrune/save-as)
 (bind-key* "C-s" 'save-buffer)
 (bind-key* "C-q" 'adelrune/begin-line)
-(bind-key* "C-z" 'undo)
-(bind-key* "C-S-z" 'redo)
-(bind-key* "C-y" 'redo)
 (bind-key* "C-a" 'mark-whole-buffer)
 (bind-key* "C-w" 'kill-buffer)
-;;(bind-key* "C-S-o" 'helm-buffers-list)
 (bind-key* "M-n" 'next-buffer)
 (bind-key* "M-p" 'previous-buffer)
 (bind-key* "C-<prior>" 'previous-buffer)
@@ -219,7 +191,6 @@ or go back to just one window (by deleting all but the selected window)."
   :defer t
   :diminish ""
   :bind
-  ("C-k g" . git-gutter:next-hunk)
   :init
   (add-hook 'prog-mode-hook #'git-gutter-mode)
   (add-hook 'text-mode-hook #'git-gutter-mode)
@@ -244,6 +215,30 @@ or go back to just one window (by deleting all but the selected window)."
 (customize-set-variable
    'git-gutter:update-interval 2)
 
+(use-package hydra)
+
+(defhydra hydra-git-gutter (global-map "C-S-g")
+
+  "
+Git gutter:
+  _<up>_ next hunk        _s_tage hunk     _q_uit
+  _<down>_ previous hunk    _r_evert hunk
+  ^ ^                _p_opup hunk
+  _f_irst hunk
+  _l_ast hunk        set start _R_evision
+"
+  ("<up>" git-gutter:next-hunk)
+  ("<down>" git-gutter:previous-hunk)
+  ("f" (progn (goto-char (point-min))
+              (git-gutter:next-hunk 1)))
+  ("l" (progn (goto-char (point-min))
+              (git-gutter:previous-hunk 1)))
+  ("s" git-gutter:stage-hunk)
+  ("r" git-gutter:revert-hunk)
+  ("p" git-gutter:popup-hunk)
+  ("R" git-gutter:set-start-revision)
+  ("q" nil :color blue))
+
 (use-package helm
   :ensure t
   :bind
@@ -263,14 +258,11 @@ or go back to just one window (by deleting all but the selected window)."
           helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
           helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
           helm-ff-file-name-history-use-recentf t)))
+
 (use-package ivy)
 (use-package swiper
     :bind
   ("C-f" . swiper))
-
-
-;(bind-key* "M-x" 'execute-extended-command)
-
 
 (use-package tabbar)
 (tabbar-mode 1)
@@ -400,6 +392,23 @@ or go back to just one window (by deleting all but the selected window)."
  :background "gray20"
  :height 0.6)
 
+(defun switch-tab-group (group-name)
+  "Switch to a specific tab group."
+  (let ((tab-buffer-list (mapcar
+          #'(lambda (b)
+              (with-current-buffer b
+                (list (current-buffer)
+                      (buffer-name)
+                      (funcall tabbar-buffer-groups-function) )))
+               (funcall tabbar-buffer-list-function))))
+    (catch 'done
+      (mapc
+        #'(lambda (group)
+          (when (equal group-name (format "%s" (car (car (cdr (cdr group))))))
+            (throw 'done (switch-to-buffer (car (cdr group))))))
+        tab-buffer-list) )))
+
+
 ;; Change padding of the tabs
 ;; we also need to set separator to avoid overlapping tabs by highlighted tabs
 (custom-set-variables
@@ -409,7 +418,7 @@ or go back to just one window (by deleting all but the selected window)."
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -427,8 +436,7 @@ That is, a string used to represent it on the tab bar."
                        (length (tabbar-view
                                 (tabbar-current-tabset)))))))))
 
-;; This doesn't work for revert, I don't know.
-;;(add-hook 'after-revert-hook 'ztl-modification-state-change)
+
 (add-hook 'first-change-hook 'ztl-on-buffer-modification)
 
 (defun adelrune/avy-goto-char-timer-flash ()
@@ -460,7 +468,6 @@ That is, a string used to represent it on the tab bar."
 (define-key yas-minor-mode-map [tab] nil)
 (define-key yas-minor-mode-map (kbd "TAB") nil)
 
-(define-key cua-global-keymap [C-return] nil)
 (bind-key* "<C-return>" 'yas-expand)
 
 (use-package projectile
@@ -473,7 +480,6 @@ That is, a string used to represent it on the tab bar."
   :config
   (helm-projectile-on)
   :bind
-  ("C-M-p" . helm-projectile-switch-project)
   ("C-p" . helm-projectile-find-file)
   ("C-S-f" . helm-projectile-grep))
 
@@ -533,6 +539,13 @@ That is, a string used to represent it on the tab bar."
   (persp-mode-projectile-bridge-mode 1)
   )
 
+;; gets rid of stupid emac buffer on first project switch
+(defun adelrune/switch-project ()
+  (interactive)
+  (progn (helm-projectile)
+         (switch-tab-group "user")))
+
+(bind-key* "C-M-p" 'adelrune/switch-project)
 
 ;; Funky stuff
 
@@ -544,7 +557,6 @@ That is, a string used to represent it on the tab bar."
   (setq kill-ring (cdr kill-ring)))
 (bind-key* "C-S-k" 'ruthlessly-kill-line)
 
-(cua-mode)
 (when (display-graphic-p)
   (scroll-bar-mode -1)
   (tool-bar-mode -1))
@@ -587,19 +599,7 @@ That is, a string used to represent it on the tab bar."
     (find-file (pop killed-file-list))))
 (bind-key* "C-S-t" 'reopen-killed-file)
 
-(use-package open-junk-file)
-
 (setq initial-major-mode (quote text-mode))
-(defun xah-new-empty-buffer ()
-  "Create a new empty buffer.
-New buffer will be named “untitled” or “untitled<2>”, “untitled<3>”, etc.
-Version 2017-11-01"
-  (interactive)
-  (let (($buf (generate-new-buffer "untitled")))
-    (setq buffer-offer-save t)
-    (switch-to-buffer $buf)
-    $buf
-    ))
 
 (use-package highlight-symbol
   :config
@@ -819,18 +819,27 @@ Version 2017-11-01"
       (setq transient-mark-mode (cons 'only transient-mark-mode)))))
 
 (bind-key* "C-d" 'adelrune/mc-mark-next-symbol)
-;; java mode tabarnak
-(defun on-java-loaded ()
-  (define-key java-mode-mapjava-mode-map (kbd "C-d") 'adelrune/mc-mark-next-symbol))
-(add-hook 'java-mode-hook 'on-java-loaded)
-
 (bind-key* "C-S-a" 'mc/mark-all-dwim)
 
 (global-auto-revert-mode)
 (setq-default indent-tabs-mode nil)
 
-;; inlines move-lines (https://github.com/targzeta/move-lines/blob/master/move-lines.el) because why not
+(use-package visual-regexp)
 
+(use-package visual-regexp-steroids
+  :bind ("C-c r" . 'vr/query-replace))
+
+
+(defun adelrune/new-file ()
+                  (interactive)
+                  (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999))))))
+
+(bind-key* "C-n" 'adelrune/new-file)
+
+(use-package rust-mode)
+(define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
+
+;; inlines move-lines (https://github.com/targzeta/move-lines/blob/master/move-lines.el) because why not
 (defun move-lines--internal (n)
   "Moves the current line or, if region is actives, the lines surrounding
 region, of N lines. Down if N is positive, up if is negative"
@@ -888,21 +897,6 @@ region, of N lines. Down if N is positive, up if is negative"
       (set-mark (+ (point) (- region-start region-end)))
       (if swap-point-mark
           (exchange-point-and-mark)))))
-
-(use-package visual-regexp)
-
-(use-package visual-regexp-steroids
-  :bind ("C-c r" . 'vr/query-replace))
-
-
-(defun adelrune/new-file ()
-                  (interactive)
-                  (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999))))))
-
-(bind-key* "C-n" 'adelrune/new-file)
-
-(use-package rust-mode)
-(define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
 
 (defun move-lines-up (n)
   "Moves the current line or, if region is actives, the lines surrounding
