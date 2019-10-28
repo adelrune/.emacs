@@ -133,6 +133,40 @@ or go back to just one window (by deleting all but the selected window)."
     ((string-match "^ \\*" (buffer-name (current-buffer)))
      (bury-buffer))))
 
+(use-package multiple-cursors)
+(require 'multiple-cursors-core)
+(require 'mc-cycle-cursors)
+
+(defvar multiple-cursors-mode-enabled-hook nil)
+(defvar multiple-cursors-mode-disabled-hook nil)
+
+(defun on-mc ()
+  (cua-mode 0)
+  (define-key mc/keymap (kbd "C-c") 'kill-ring-save)
+  (define-key mc/keymap (kbd "C-v") 'yank)
+  (define-key mc/keymap (kbd "C-x") 'kill-region))
+(defun off-mc ()
+  (cua-mode 1))
+
+(add-hook 'multiple-cursors-mode-enabled-hook #'on-mc)
+(add-hook 'multiple-cursors-mode-disabled-hook #'off-mc)
+
+(define-key mc/keymap (kbd "<return>") nil)
+;; Exit mc mode on <escape>
+(define-key mc/keymap (kbd "<escape>") 'multiple-cursors-mode)
+(defun adelrune/mc-mark-next-symbol ()
+  (interactive)
+  (if mark-active
+      (progn
+        (mc/mark-next-like-this-symbol 1)
+        (while (> (overlay-start (mc/furthest-cursor-after-point)) (window-end)) (mc/cycle-forward)))
+    (progn
+      (mc--mark-symbol-at-point)
+      (setq transient-mark-mode (cons 'only transient-mark-mode)))))
+
+(bind-key* "C-d" 'adelrune/mc-mark-next-symbol)
+(bind-key* "C-S-a" 'mc/mark-all-dwim)
+
 (defun adelrune/kb-escape-quit ()
   (interactive)
   (progn
@@ -539,10 +573,14 @@ That is, a string used to represent it on the tab bar."
   (persp-mode-projectile-bridge-mode 1)
   )
 
+
 ;; gets rid of stupid emac buffer on first project switch
 (defun adelrune/switch-project ()
   (interactive)
-  (progn (helm-projectile)
+  ;; helm-projectile-switch-project doesn't exist before a call to helm-projectile ?!?!?
+  (progn (if (fboundp 'helm-projectile-switch-project)
+      (helm-projectile-switch-project)
+      (helm-projectile))
          (switch-tab-group "user")))
 
 (bind-key* "C-M-p" 'adelrune/switch-project)
@@ -820,40 +858,6 @@ That is, a string used to represent it on the tab bar."
 (set-keyboard-coding-system 'utf-8) ; pretty
 (set-selection-coding-system 'utf-8) ; please
 (prefer-coding-system 'utf-8) ; with sugar on top
-(print mark-active)
-(use-package multiple-cursors)
-(require 'multiple-cursors-core)
-(require 'mc-cycle-cursors)
-
-(defvar multiple-cursors-mode-enabled-hook nil)
-(defvar multiple-cursors-mode-disabled-hook nil)
-
-(defun on-mc ()
-  (cua-mode 0)
-  (define-key mc/keymap (kbd "C-c") 'kill-ring-save)
-  (define-key mc/keymap (kbd "C-v") 'yank)
-  (define-key mc/keymap (kbd "C-x") 'kill-region))
-(defun off-mc ()
-  (cua-mode 1))
-
-(add-hook 'multiple-cursors-mode-enabled-hook #'on-mc)
-(add-hook 'multiple-cursors-mode-disabled-hook #'off-mc)
-
-(define-key mc/keymap (kbd "<return>") nil)
-;; Exit mc mode on <escape>
-(define-key mc/keymap (kbd "<escape>") 'multiple-cursors-mode)
-(defun adelrune/mc-mark-next-symbol ()
-  (interactive)
-  (if mark-active
-      (progn
-        (mc/mark-next-like-this-symbol 1)
-        (while (> (overlay-start (mc/furthest-cursor-after-point)) (window-end)) (mc/cycle-forward)))
-    (progn
-      (mc--mark-symbol-at-point)
-      (setq transient-mark-mode (cons 'only transient-mark-mode)))))
-
-(bind-key* "C-d" 'adelrune/mc-mark-next-symbol)
-(bind-key* "C-S-a" 'mc/mark-all-dwim)
 
 (global-auto-revert-mode)
 (setq-default indent-tabs-mode nil)
@@ -956,3 +960,4 @@ and M-n or M-<down> for moving down."
   (bind-key* "M-n" 'move-lines-down)
   (bind-key* "M-<down>" 'move-lines-down))
 (move-lines-binding)
+(put 'upcase-region 'disabled nil)
