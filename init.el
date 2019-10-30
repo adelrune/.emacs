@@ -583,6 +583,30 @@ That is, a string used to represent it on the tab bar."
       (helm-projectile))
          (switch-tab-group "user")))
 
+;; thanks ergoemacs person
+(defun adelrune--read-lines (filePath)
+  "Return a list of lines of a file at filePath."
+  (with-temp-buffer
+    (insert-file-contents filePath)
+    (split-string (buffer-string) "\n" t)))
+
+(defun adelrune/projectile-open-default-file ()
+  (interactive)
+  (let* ( (project-root (projectile-ensure-project (projectile-project-root)))
+          (proj-path (expand-file-name ".projectile" project-root))
+          (init-files (if (file-exists-p proj-path) (adelrune--read-lines proj-path) nil))
+          (readme-path (expand-file-name "README.md" project-root)))
+    (if init-files
+        (progn
+          (mapcar (lambda (filename)
+                    (find-file (expand-file-name filename project-root)))
+                  init-files))
+      (if (file-exists-p readme-path)
+          (find-file readme-path)
+        (helm-projectile-find-file)))))
+
+(setq projectile-switch-project-action 'adelrune/projectile-open-default-file)
+
 (bind-key* "C-M-p" 'adelrune/switch-project)
 
 ;; Funky stuff
