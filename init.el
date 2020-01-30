@@ -61,11 +61,26 @@
   :config
   (company-quickhelp-mode 1))
 
-(let ((map company-active-map))
-  (define-key map (kbd "<tab>") 'company-complete-selection)
-  (define-key map (kbd "RET") 'nil)
-  (define-key map (kbd "<escape>") 'company-abort)
-  (accessible-keymaps company-active-map))
+;; thanks you random stackoverflow person
+(dolist (key '("<return>" "RET"))
+  ;; Here we are using an advanced feature of define-key that lets
+  ;; us pass an "extended menu item" instead of an interactive
+  ;; function. Doing this allows RET to regain its usual
+  ;; functionality when the user has not explicitly interacted with
+  ;; Company.
+  (define-key company-active-map (kbd key)
+    `(menu-item nil company-complete
+                :filter ,(lambda (cmd)
+                           (when (company-explicit-action-p)
+                             cmd)))))
+(define-key company-active-map (kbd "TAB") #'company-complete-selection)
+(define-key company-active-map (kbd "SPC") nil)
+
+;; Company appears to override the above keymap based on company-auto-complete-chars.
+;; Turning it off ensures we have full control.
+(setq company-auto-complete-chars nil)
+
+(use-package nim-mode)
 
 (use-package irony
   :config
@@ -91,6 +106,7 @@
 (use-package sublimity)
 (add-to-list 'initial-frame-alist '(font . "Fira Code-10"))
 (add-to-list 'default-frame-alist '(font . "Fira Code-10"))
+
 (sublimity-mode 1)
 (setq scroll-conservatively 10000)
 
@@ -144,9 +160,11 @@ or go back to just one window (by deleting all but the selected window)."
   (cua-mode 0)
   (define-key mc/keymap (kbd "C-c") 'kill-ring-save)
   (define-key mc/keymap (kbd "C-v") 'yank)
-  (define-key mc/keymap (kbd "C-x") 'kill-region))
+  (define-key mc/keymap (kbd "C-x") 'kill-region)
+  (setq-default cursor-type 'block))
 (defun off-mc ()
-  (cua-mode 1))
+  (cua-mode 1)
+  (setq-default cursor-type 'bar))
 
 (add-hook 'multiple-cursors-mode-enabled-hook #'on-mc)
 (add-hook 'multiple-cursors-mode-disabled-hook #'off-mc)
@@ -452,7 +470,7 @@ Git gutter:
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(nim nim-mode hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -847,7 +865,7 @@ That is, a string used to represent it on the tab bar."
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
-  :init (setq markdown-command "multimarkdown"))
+  :init (setq markdown-command "pandoc"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -985,3 +1003,7 @@ and M-n or M-<down> for moving down."
   (bind-key* "M-<down>" 'move-lines-down))
 (move-lines-binding)
 (put 'upcase-region 'disabled nil)
+
+(defun eval-trad-list ()
+  (interactive)
+  (message-box (shell-command-to-string "python3 /home/guillaume/Documents/partitions/itm/itm_utils.py")))
