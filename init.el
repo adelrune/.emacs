@@ -1,3 +1,15 @@
+(require 'package)
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("melpa" . "https://melpa.org/packages/")))
+
+(package-initialize)
+(unless (package-installed-p 'use-package)
+  ;; only fetch the archives if you don't have use-package installed
+  (package-refresh-contents)
+  (package-install 'use-package))
+(require 'use-package)
+
 (cua-mode)
 (define-key cua-global-keymap [C-return] nil)
 (define-key cua-global-keymap (kbd "C-z") nil)
@@ -17,10 +29,6 @@
 (setq undo-strong-limit 12000000)
 (setq undo-outer-limit 120000000)
 
-(require 'package)
-(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("melpa" . "https://melpa.org/packages/")))
 (require 'bind-key)
 
 (setq tls-checktrust nil)
@@ -48,7 +56,7 @@
 (use-package expand-region
   :bind ("C-=" . 'adelrune/expand-dong))
 
-(setq python-shell-interpreter "ipython" python-shell-interpreter-args "-i")
+;; (setq python-shell-interpreter "ipython" python-shell-interpreter-args "-i")
 
 ;; completion stuff
 (use-package company
@@ -75,6 +83,7 @@
                              cmd)))))
 (define-key company-active-map (kbd "TAB") #'company-complete-selection)
 (define-key company-active-map (kbd "SPC") nil)
+(define-key company-active-map (kbd "C-s") nil)
 
 ;; Company appears to override the above keymap based on company-auto-complete-chars.
 ;; Turning it off ensures we have full control.
@@ -90,11 +99,19 @@
 
   (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
 
+(use-package arduino-mode)
+
+(use-package gdscript-mode)
+
 (use-package processing-mode)
 
 (use-package jedi-core
   :config
   (setq jedi:environment-virtualenv (list "virtualenv" "--system-site-package" "--quiet" "--python=python3")))
+
+(add-to-list 'auto-mode-alist '("\\.pyde\\'" . python-mode))
+
+(use-package xonsh-mode)
 
 (use-package company-jedi)
 (add-to-list 'company-backends 'company-jedi)
@@ -199,6 +216,12 @@ or go back to just one window (by deleting all but the selected window)."
     (save-buffer)
     ))
 
+(defun adelrune/save ()
+  (interactive)
+  (if (string-match-p "Nouveau[[:space:]]document[[:space:]][[:digit:]]+" (buffer-name))
+      (adelrune/save-as)
+    (save-buffer)))
+
 (defun adelrune/begin-line ()
   (interactive "^")
   (beginning-of-line-text))
@@ -206,7 +229,7 @@ or go back to just one window (by deleting all but the selected window)."
 (bind-key* "<escape>" 'adelrune/kb-escape-quit)
 (bind-key* "C-g" 'goto-line)
 (bind-key* "C-S-s" 'adelrune/save-as)
-(bind-key* "C-s" 'save-buffer)
+(bind-key* "C-s" 'adelrune/save)
 (bind-key* "C-q" 'adelrune/begin-line)
 (bind-key* "C-a" 'mark-whole-buffer)
 (bind-key* "C-w" 'kill-buffer)
@@ -320,6 +343,17 @@ Git gutter:
 (tabbar-mode 1)
 (bind-key* "C-<prior>" 'tabbar-backward-tab)
 (bind-key* "C-<next>" 'tabbar-forward-tab)
+
+(defun adelrune/run-leitmotiv ()
+  (interactive)
+  (progn
+    (shell-command (concat
+                    "python /home/guillaume/code/leitmotiv/leitmotiv.py "
+                    (buffer-file-name)))
+    (revert-buffer :ignore-auto :noconfirm)
+    (if (not (boundp 'iimage-mode))
+        (iimage-mode))
+    (iimage-recenter)))
 
 (defun tabbar-move-current-tab-one-place-left ()
   "Move current tab one place left, unless it's already the leftmost."
@@ -470,7 +504,7 @@ Git gutter:
  ;; If there is more than one, they won't work right.
  '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(nim nim-mode hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(gdscript-mode xonsh-mode arduino-mode scad-mode dash-functional dash-functionnal dash spinner company-lsp emacs-w3m w3m csharp-mode nim nim-mode hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -520,7 +554,7 @@ That is, a string used to represent it on the tab bar."
 (define-key yas-minor-mode-map [tab] nil)
 (define-key yas-minor-mode-map (kbd "TAB") nil)
 
-(bind-key* "<C-return>" 'yas-expand)
+
 
 (use-package projectile
   :ensure t
@@ -656,11 +690,10 @@ That is, a string used to represent it on the tab bar."
       (set-marker next-line-marker nil))))
 
 (defun ruthlessly-kill-line ()
-  "Deletes a line, but does not put it in the kill-ring. (kinda)"
   (interactive)
-  (move-beginning-of-line 1)
-  (kill-line 1)
-  (setq kill-ring (cdr kill-ring)))
+  (move-beginning-of-line 0)
+  (delete-region (line-beginning-position) (+ 1  (line-end-position))))
+
 
 (defun adelrune/ruthlessly-kill-lines ()
   (interactive)
@@ -692,6 +725,15 @@ That is, a string used to represent it on the tab bar."
 
 (use-package web-mode
   :ensure t)
+
+(defun adelrune/make-emmet-work-in-web-mode ()
+  (interactive)
+  (if (equal major-mode 'mhtml-mode)
+    (emmet-expand-yas)
+    (yas-expand)))
+(bind-key* "<C-return>" 'adelrune/make-emmet-work-in-web-mode)
+
+
 (use-package monokai-theme)
 (load-theme 'monokai t)
 ;(load-theme 'monokai-alt t)
@@ -884,7 +926,7 @@ That is, a string used to represent it on the tab bar."
   (add-to-list 'smart-tab-completion-functions-alist
                (cons major-mode #'emmet-expand-line)))
 (add-emmet-expand-to-smart-tab-completions)
-
+(use-package scad-mode)
 (use-package emmet-mode)
 (add-hook 'sgml-mode-hook 'emmet-mode)
 (add-hook 'sgml-mode-hook 'add-emmet-expand-to-smart-tab-completions)
@@ -915,6 +957,8 @@ That is, a string used to represent it on the tab bar."
                   (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999))))))
 
 (bind-key* "C-n" 'adelrune/new-file)
+
+(use-package csharp-mode)
 
 (use-package rust-mode)
 (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
@@ -1007,3 +1051,4 @@ and M-n or M-<down> for moving down."
 (defun eval-trad-list ()
   (interactive)
   (message-box (shell-command-to-string "python3 /home/guillaume/Documents/partitions/itm/itm_utils.py")))
+(put 'downcase-region 'disabled nil)
