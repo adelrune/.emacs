@@ -502,7 +502,7 @@ Git gutter:
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(git-gutter:update-interval 2)
+ '(git-gutter:update-interval 2 t)
  '(package-selected-packages
    '(gdscript-mode xonsh-mode arduino-mode scad-mode dash-functional dash-functionnal dash spinner company-lsp emacs-w3m w3m csharp-mode nim nim-mode hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
@@ -662,45 +662,22 @@ That is, a string used to represent it on the tab bar."
 (bind-key* "C-M-p" 'adelrune/switch-project)
 
 ;; Funky stuff
-;;thanks stackoverflow person even though I had to modify your code
-(defun apply-function-to-region-lines (fn)
-  (save-excursion
-    (goto-char (region-end))
-    (move-end-of-line 1)
-    (let ((end-marker (copy-marker (point-marker)))
-          next-line-marker)
-      (goto-char (region-beginning))
-      (move-beginning-of-line 1)
-      (setq next-line-marker (point-marker))
-      (while (< next-line-marker end-marker)
-        (let ((start nil)
-              (end nil))
-          (goto-char next-line-marker)
-          (save-excursion
-            (setq start (point))
-            (forward-line 1)
-            (set-marker next-line-marker (point))
-            (setq end (point)))
-          (save-excursion
-            (let ((mark-active nil))
-              (narrow-to-region start end)
-              (funcall fn)
-              (widen)))))
-      (set-marker end-marker nil)
-      (set-marker next-line-marker nil))))
-
-(defun ruthlessly-kill-line ()
-  (interactive)
-  (move-beginning-of-line 0)
-  (delete-region (line-beginning-position) (+ 1  (line-end-position))))
-
 
 (defun adelrune/ruthlessly-kill-lines ()
   (interactive)
   (if (use-region-p)
+      (let* (
+            (min (min (point) (mark)))
+            (max (max (point) (mark)))
+            (num-lines (count-lines min max))
+            (i 0))
+        (while (< i num-lines)
+          (save-excursion
+            (goto-char min)
+            (delete-region (line-beginning-position) (+ 1 (line-end-position))))
+          (setq i (+ 1 i))))
+      (delete-region (line-beginning-position) (+ 1 (line-end-position)))))
 
-      (apply-function-to-region-lines 'ruthlessly-kill-line)
-    (ruthlessly-kill-line)))
 
 (bind-key* "C-S-k" 'adelrune/ruthlessly-kill-lines)
 
