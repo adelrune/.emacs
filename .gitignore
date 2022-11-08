@@ -1,10 +1,16 @@
 ac-comphist.dat
+transient
 anaconda-mode
 auto-save-list
 elpa
+.projectile
+*.~*~
+*.*~
 ido.last
 ido.last~
+session.*
 #init.el
 init.el~
 persp-confs
+projectile.cache
 projectile-bookmarks.eld
