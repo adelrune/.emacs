@@ -55,13 +55,13 @@
   :bind ("C-=" . 'adelrune/expand-dong))
 
 
-;; completion stuff
-(use-package company
-  :init
-  (global-company-mode)
-  :config
-  (setq company-idle-delay 0.03))
-
+(defun adelrune/company-manual-begin-fuzzy ()
+  (interactive)
+  (progn
+    (company-fuzzy-mode t)
+    (company-manual-begin)
+    (company-fuzzy-mode 0)
+    ))
 
 ;; thanks https://github.com/radian-software/radian/blob/223abc524f693504af6ebbc70ad2d84d9a6e2d1b/radian-emacs/radian-autocomplete.el#L6-L182
 (use-package company
@@ -86,6 +86,8 @@
 
          ;; Prevent SPC from ever triggering a completion.
          ("SPC" . nil)
+         ;; keep C-s as save
+         ("C-s" . nil)
 
          ;; The following are keybindings that only take effect if the
          ;; user has explicitly interacted with Company.
@@ -114,7 +116,7 @@
   :bind* (;; The default keybinding for `completion-at-point' and
           ;; `complete-symbol' is M-TAB or equivalently C-M-i. Here we
           ;; make sure that no minor modes override this keybinding.
-          ("M-TAB" . company-manual-begin))
+          ("M-TAB" . adelrune/company-manual-begin-fuzzy))
 
   :diminish company-mode
   :config
@@ -123,11 +125,11 @@
   (global-company-mode 1)
 
   ;; Show completions instantly, rather than after half a second.
-  (setq company-idle-delay 0)
+  (setq company-idle-delay 0.2)
 
   ;; Show completions after typing a single character, rather than
   ;; after typing three characters.
-  (setq company-minimum-prefix-length 2)
+  (setq company-minimum-prefix-length 1)
 
   ;; Show a maximum of 10 suggestions. This is the default but I think
   ;; it's best to be explicit.
@@ -148,8 +150,8 @@
 
   ;; Prevent non-matching input (which will dismiss the completions
   ;; menu), but only if the user interacts explicitly with Company.
-  (setq company-require-match #'company-explicit-action-p)
-
+  ;; (setq company-require-match #'company-explicit-action-p)
+  (setq company-require-match nil)
   ;; Company appears to override our settings in `company-active-map'
   ;; based on `company-auto-complete-chars'. Turning it off ensures we
   ;; have full control.
@@ -159,6 +161,22 @@
   :config
   (company-quickhelp-mode 1))
 
+
+(use-package flx)
+(use-package company-fuzzy
+  :init
+  (setq company-fuzzy-sorting-backend 'flx
+        company-fuzzy-prefix-on-top nil
+        ))
+
+(use-package doom-modeline
+  :init
+  (setq doom-modeline-minor-modes t)
+  (doom-modeline-mode 1))
+
+(use-package minions
+  :init
+  (minions-mode 1))
 
 
 (use-package nim-mode)
@@ -177,19 +195,41 @@
 
 (use-package processing-mode)
 
-(use-package jedi-core
-  :config
-  (setq jedi:environment-virtualenv (list "virtualenv" "--system-site-package" "--quiet" "--python=python3")))
+;; (use-package jedi-core
+;;   :config
+;;   (setq jedi:environment-virtualenv (list "virtualenv" "--system-site-package" "--quiet" "--python=python3")))
 
-(add-to-list 'auto-mode-alist '("\\.pyde\\'" . python-mode))
+;; (add-to-list 'auto-mode-alist '("\\.pyde\\'" . python-mode))
 
 (use-package xonsh-mode)
 
-(use-package company-jedi)
-(add-to-list 'company-backends 'company-jedi)
+;; (use-package company-jedi)
+;; (add-to-list 'company-backends 'company-jedi)
 
-(use-package company-tern)
-(add-to-list 'company-backends 'company-tern)
+(use-package eglot)
+
+(defun m/projectile-project-find-function (dir)
+  (let ((root (projectile-project-root dir)))
+    (and root (cons 'my/projectile root))))
+
+(cl-defmethod project-root ((pr (head my/projectile)))
+  (cdr pr))
+
+(cl-defmethod project-files ((pr (head my/projectile)) &optional _dirs)
+  (let ((root (cdr pr)))
+    (mapcar
+     (lambda (file)
+       (concat root file))
+     (projectile-project-files root))))
+
+(cl-defmethod project-ignores ((pr (head my/projectile)) _dir)
+  (let ((default-directory (cdr pr)))
+    (projectile-patterns-to-ignore)))
+
+(with-eval-after-load 'project
+  (add-to-list 'project-find-functions 'm/projectile-project-find-function))
+
+
 (add-hook 'js2-mode-hook (lambda ()
                            (tern-mode)))
 (use-package sublimity)
@@ -386,7 +426,6 @@ Git gutter:
   :ensure t
   :bind
   (("M-x" . adelrune/helm-M-x)
-   ("C-o" . helm-find-files)
    ("C-S-v" . 'helm-show-kill-ring)
    )
   :config
@@ -402,7 +441,15 @@ Git gutter:
           helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
           helm-ff-file-name-history-use-recentf t)))
 
-(use-package ivy)
+(use-package ivy
+  :config
+  (ivy-mode))
+
+(use-package counsel
+  :bind
+  ("C-o" . counsel-find-file)
+  )
+
 (use-package swiper
     :bind
   ("C-f" . swiper))
@@ -570,9 +617,9 @@ Git gutter:
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(git-gutter:update-interval 2 t)
+ '(git-gutter:update-interval 2)
  '(package-selected-packages
-   '(visual-regexp-steroids visual-regexp emmet-mode smart-tab highlight-symbol gdscript-mode xonsh-mode arduino-mode scad-mode dash-functional dash-functionnal dash spinner company-lsp emacs-w3m w3m csharp-mode nim nim-mode hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
+   '(mood-line-mode moody minions doom-modeline mood-line telephone-line eglot counsel company-fuzzy visual-regexp-steroids visual-regexp emmet-mode smart-tab highlight-symbol gdscript-mode xonsh-mode arduino-mode scad-mode dash-functional dash-functionnal dash spinner company-lsp emacs-w3m w3m csharp-mode nim nim-mode hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
 ;; adding spaces
 (defun tabbar-buffer-tab-label (tab)
   "Return a label for TAB.
@@ -1086,6 +1133,7 @@ and M-n or M-<down> for moving down."
   (bind-key* "M-<down>" 'move-lines-down))
 (move-lines-binding)
 (put 'upcase-region 'disabled nil)
+
 
 (defun eval-trad-list ()
   (interactive)
