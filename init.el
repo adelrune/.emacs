@@ -15,14 +15,28 @@
 (require 'use-package)
 
 (load-library "use-package")
-;;(package-refresh-contents)
+;; (package-refresh-contents)
 (setq use-package-always-ensure t)
 (setq tls-checktrust nil)
 (setq gnutls-verify-error nil)
 
+;; region highlight extends only to the end of characters
+(set-face-attribute 'region nil :extend nil)
+
 ;; cua mode
 
 (cua-mode)
+
+;; stop putting filname~ crap everywhere
+(setq
+   backup-by-copying t      ; don't clobber symlinks
+   backup-directory-alist
+    '(("." . "~/.saves/"))    ; don't litter my fs tree
+   delete-old-versions t
+   kept-new-versions 6
+   kept-old-versions 2
+   version-control t)       ; use versioned backups
+
 
 ;; undo stuff
 
@@ -35,13 +49,16 @@
 (setq undo-tree-enable-undo-in-region nil)
 (global-undo-tree-mode)
 
+;; Prevent undo tree files from polluting your git repo
+(setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
+
 (setq undo-limit 800000)
 (setq undo-strong-limit 12000000)
 (setq undo-outer-limit 120000000)
 
 (add-hook 'write-file-hooks 'delete-trailing-whitespace)
 
-(require 'bind-key)
+(use-package bind-key)
 
 ;; expand region package with function that do not leave a sticky mark
 (defun adelrune/expand-dong ()
@@ -181,6 +198,15 @@
 
 (use-package nim-mode)
 
+(use-package cmake-mode)
+
+(use-package google-c-style)
+
+(add-hook 'c-mode-common-hook 'google-set-c-style)
+(add-hook 'c-mode-common-hook 'google-make-newline-indent)
+
+
+
 (use-package irony
   :config
   (add-hook 'c++-mode-hook 'irony-mode)
@@ -188,6 +214,18 @@
   (add-hook 'objc-mode-hook 'irony-mode)
 
   (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
+
+(defun adelrune/leave-c++-mode ()
+  (when (eq major-mode 'c++-mode)
+      (setq company-minimum-prefix-length 1)))
+
+
+(defun adelrune/enter-c++-mode-function ()
+      (setq company-minimum-prefix-length 4))
+
+
+(add-hook 'change-major-mode-hook 'adelrune/leave-c++-mode)
+(add-hook 'c++-mode-hook 'adelrune/enter-c++-mode-function)
 
 (use-package arduino-mode)
 
@@ -201,12 +239,19 @@
 
 ;; (add-to-list 'auto-mode-alist '("\\.pyde\\'" . python-mode))
 
+;; (use-package vterm
+    ;; :ensure t)
+
+(use-package multi-vterm :ensure t)
+
 (use-package xonsh-mode)
 
 ;; (use-package company-jedi)
 ;; (add-to-list 'company-backends 'company-jedi)
 
 (use-package eglot)
+
+;; (use-package lsp-mode)
 
 (defun m/projectile-project-find-function (dir)
   (let ((root (projectile-project-root dir)))
@@ -230,11 +275,13 @@
   (add-to-list 'project-find-functions 'm/projectile-project-find-function))
 
 
-(add-hook 'js2-mode-hook (lambda ()
-                           (tern-mode)))
+;; (use-package company-tern)
+;; (add-to-list 'company-backends 'company-tern)
+;; (add-hook 'js2-mode-hook (lambda ()
+                           ;; (tern-mode)))
 (use-package sublimity)
-(add-to-list 'initial-frame-alist '(font . "Fira Code-10"))
-(add-to-list 'default-frame-alist '(font . "Fira Code-10"))
+;; (add-to-list 'initial-frame-alist '(font . "Fira Code-12"))
+;; (add-to-list 'default-frame-alist '(font . "Fira Code-12"))
 
 (sublimity-mode 1)
 (setq scroll-conservatively 10000)
@@ -281,10 +328,10 @@
 
 ;; thanks https://emacs.stackexchange.com/a/51452 (but heavily modified)
 (mc/load-lists)
-(push 'cua--prefix-override-handler
-      mc/cmds-to-run-once)
-(push 'cua-copy-region
-      mc/cmds-to-run-for-all)
+(add-to-list 'mc/cmds-to-run-once
+             'cua--prefix-override-handler)
+(add-to-list 'mc/cmds-to-run-for-all
+             'cua-copy-region)
 
 (advice-add #'cua-copy-region
             :around (lambda (oldfn &rest args)
@@ -303,9 +350,7 @@
 (defun adelrune/save-as ()
   (interactive)
   (progn
-    (helm-mode 0)
     (set-visited-file-name (read-file-name "Save as :"))
-    (helm-mode 1)
     (save-buffer)
     ))
 
@@ -325,11 +370,12 @@
 (bind-key* "C-s" 'adelrune/save)
 (bind-key* "C-q" 'adelrune/begin-line)
 (bind-key* "C-a" 'mark-whole-buffer)
-(bind-key* "C-w" 'kill-buffer)
+;; (bind-key* "C-w" 'kill-buffer)
+(bind-key* "C-w" 'kill-current-buffer)
 (bind-key* "M-n" 'next-buffer)
 (bind-key* "M-p" 'previous-buffer)
-(bind-key* "C-<prior>" 'previous-buffer)
-(bind-key* "C-<next>" 'next-buffer)
+;; (bind-key* "C-<prior>" 'previous-buffer)
+;; (bind-key* "C-<next>" 'next-buffer)
 
 
 (defun adelrune/dumb-jump-go-flash ()
@@ -395,8 +441,8 @@ Git gutter:
   _f_irst hunk
   _l_ast hunk        set start _R_evision
 "
-  ("<up>" git-gutter:next-hunk)
-  ("<down>" git-gutter:previous-hunk)
+  ("<down>" git-gutter:next-hunk)
+  ("<up>" git-gutter:previous-hunk)
   ("f" (progn (goto-char (point-min))
               (git-gutter:next-hunk 1)))
   ("l" (progn (goto-char (point-min))
@@ -421,13 +467,16 @@ Git gutter:
                            (memq cmd mc/cmds-to-run-for-all)
                            (mc/prompt-for-inclusion-in-whitelist cmd)))
                   (mc/execute-command-for-all-fake-cursors cmd))))))
-
+(use-package async)
 (use-package helm
   :ensure t
   :bind
   (("M-x" . adelrune/helm-M-x)
    ("C-S-v" . 'helm-show-kill-ring)
-   )
+   ("C-o" . helm-find-files)
+   ("C-<dead-circumflex>" . helm-buffers-list)
+   (:map helm-find-files-map ("<tab>" . helm-execute-persistent-action)
+   ))
   :config
   (setq-default helm-M-x-fuzzy-match t)
   (progn
@@ -445,219 +494,85 @@ Git gutter:
   :config
   (ivy-mode))
 
+(defun adelrune/gimme-gimme-a-region-value-after-midnight ()
+  (substring-no-properties (buffer-substring (region-beginning) (region-end))))
+
+(defun adelrune/counsel-rg-take-the-right-thing-plz (beginning end)
+  ; interactive r adds beginning and end of region arguments
+  (interactive "r")
+  (if (use-region-p)
+      (counsel-rg (adelrune/gimme-gimme-a-region-value-after-midnight) )
+    (counsel-rg(thing-at-point 'symbol))))
+
 (use-package counsel
   :bind
-  ("C-o" . counsel-find-file)
-  )
+  ("C-S-f" . adelrune/counsel-rg-take-the-right-thing-plz))
 
 (use-package swiper
     :bind
   ("C-f" . swiper))
 
-(use-package tabbar)
-(tabbar-mode 1)
-(bind-key* "C-<prior>" 'tabbar-backward-tab)
-(bind-key* "C-<next>" 'tabbar-forward-tab)
 
-(defun adelrune/run-leitmotiv ()
+(defun adelrune/centaur-tabs-projectile-buffer-groups ()
+  "Return the list of group names BUFFER belongs to."
+  (if centaur-tabs-projectile-buffer-group-calc
+      (symbol-value 'centaur-tabs-projectile-buffer-group-calc)
+    (set (make-local-variable 'centaur-tabs-projectile-buffer-group-calc)
+
+	 (cond
+	  ((condition-case _err
+	       (projectile-project-root)
+	     (error nil)) (list (projectile-project-name)))
+	  ((memq major-mode '(emacs-lisp-mode python-mode emacs-lisp-mode c-mode
+					      c++-mode javascript-mode js-mode
+					      js2-mode makefile-mode
+					      lua-mode vala-mode)) '("Coding"))
+	  ((memq major-mode '(nxhtml-mode html-mode
+					  mhtml-mode css-mode)) '("HTML"))
+	  ((memq major-mode '(org-mode calendar-mode diary-mode)) '("Org"))
+	  ((memq major-mode '(dired-mode)) '("Dir"))
+	  (t '("Other"))))
+    (symbol-value 'centaur-tabs-projectile-buffer-group-calc)))
+(defun adelrune/centaur-tabs-group-by-projectile-project()
+  "Group by projectile project."
   (interactive)
-  (progn
-    (shell-command (concat
-                    "python /home/guillaume/code/leitmotiv/leitmotiv.py "
-                    (buffer-file-name)))
-    (revert-buffer :ignore-auto :noconfirm)
-    (if (not (boundp 'iimage-mode))
-        (iimage-mode))
-    (iimage-recenter)))
+  (setq centaur-tabs-buffer-groups-function 'adelrune/centaur-tabs-projectile-buffer-groups)
+  (centaur-tabs-display-update))
 
-(defun tabbar-move-current-tab-one-place-left ()
-  "Move current tab one place left, unless it's already the leftmost."
-  (interactive)
-  (let* ((bufset (tabbar-current-tabset t))
-         (old-bufs (tabbar-tabs bufset))
-         (first-buf (car old-bufs))
-         (new-bufs (list)))
-    (if (string= (buffer-name) (format "%s" (car first-buf)))
-        old-bufs
-      (setq not-yet-this-buf first-buf)
-      (setq old-bufs (cdr old-bufs))
-      (while (and
-              old-bufs
-              (not (string= (buffer-name) (format "%s" (car (car old-bufs))))))
-        (push not-yet-this-buf new-bufs)
-        (setq not-yet-this-buf (car old-bufs))
-        (setq old-bufs (cdr old-bufs)))
-      (if old-bufs
-          (progn
-            (push (car old-bufs) new-bufs)
-            (push not-yet-this-buf new-bufs)
-            (setq new-bufs (reverse new-bufs))
-            (setq new-bufs (append new-bufs (cdr old-bufs))))
-        (error "Error: current buffer's name was not found in Tabbar's buffer list."))
-      (set bufset new-bufs)
-      (tabbar-set-template bufset nil)
-      (tabbar-display-update))))
-
-(defun tabbar-move-current-tab-one-place-right ()
-  "Move current tab one place right, unless it's already the rightmost."
-  (interactive)
-  (let* ((bufset (tabbar-current-tabset t))
-         (old-bufs (tabbar-tabs bufset))
-         (first-buf (car old-bufs))
-         (new-bufs (list)))
-    (while (and
-            old-bufs
-            (not (string= (buffer-name) (format "%s" (car (car old-bufs))))))
-      (push (car old-bufs) new-bufs)
-      (setq old-bufs (cdr old-bufs)))
-    (if old-bufs
-        (progn
-          (setq the-buffer (car old-bufs))
-          (setq old-bufs (cdr old-bufs))
-          (if old-bufs
-              (push (car old-bufs) new-bufs))
-          (push the-buffer new-bufs))
-      (error "Error: current buffer's name was not found in Tabbar's buffer list."))
-    (setq new-bufs (reverse new-bufs))
-    (setq new-bufs (append new-bufs (cdr old-bufs)))
-    (set bufset new-bufs)
-    (tabbar-set-template bufset nil)
-    (tabbar-display-update)))
-
-
-(bind-key* "C-S-<prior>" 'tabbar-move-current-tab-one-place-left)
-(bind-key* "C-S-<next>" 'tabbar-move-current-tab-one-place-right)
-(bind-key* "C-w" 'kill-current-buffer)
-
-;; Add a buffer modification state indicator in the tab label, and place a
-;; space around the label to make it looks less crowd.c
-(defadvice tabbar-buffer-tab-label (after fixup_tab_label_space_and_flag activate)
-  (setq ad-return-value
-        (if (and (buffer-modified-p (tabbar-tab-value tab))
-                 (buffer-file-name (tabbar-tab-value tab)))
-            (concat " + " (concat ad-return-value " "))
-          (concat " " (concat ad-return-value " ")))))
-
-;; Called each time the modification state of the buffer changed.
-(defun ztl-modification-state-change ()
-  (tabbar-set-template tabbar-current-tabset nil)
-  (tabbar-display-update))
-
-
-
-;; First-change-hook is called BEFORE the change is made.
-(defun ztl-on-buffer-modification ()
-  (set-buffer-modified-p t)
-  (ztl-modification-state-change))
-(add-hook 'after-save-hook 'ztl-modification-state-change)
-
-(defun adelrune/tabbar-buffer-groups () ;; customize to show all normal files in one group
-  "Returns the name of the tab group names the current buffer belongs to.
-    There are two groups: Emacs buffers (those whose name starts with '*', plus
-    dired buffers), and the rest.  This works at least with Emacs v24.2 using
-    tabbar.el v1.7."
-  (list (cond ((string-equal "*" (substring (buffer-name) 0 1)) "emacs")
-              ((eq major-mode 'dired-sidebar) "emacs")
-              ((eq major-mode 'dired-mode) "emacs")
-              (t "user"))))
-
-(setq tabbar-buffer-groups-function 'adelrune/tabbar-buffer-groups)
-
-;aesthetic changes to tabbar mode
-(set-face-attribute
- 'tabbar-default nil
- :background "gray20"
- :foreground "gray20"
- :box '(:line-width 1 :color "gray20" :style nil))
-(set-face-attribute
- 'tabbar-unselected nil
- :background "gray30"
- :foreground "white"
- :box '(:line-width 5 :color "gray30" :style nil))
-(set-face-attribute
- 'tabbar-selected nil
- :background "gray75"
- :foreground "black"
- :box '(:line-width 5 :color "gray75" :style nil))
-(set-face-attribute
- 'tabbar-highlight nil
- :background "white"
- :foreground "black"
- :underline nil
- :box '(:line-width 5 :color "white" :style nil))
-(set-face-attribute
- 'tabbar-button nil
- :box '(:line-width 1 :color "gray20" :style nil))
-(set-face-attribute
- 'tabbar-separator nil
- :background "gray20"
- :height 0.6)
-
-(defun switch-tab-group (group-name)
-  "Switch to a specific tab group."
-  (let ((tab-buffer-list (mapcar
-          #'(lambda (b)
-              (with-current-buffer b
-                (list (current-buffer)
-                      (buffer-name)
-                      (funcall tabbar-buffer-groups-function) )))
-               (funcall tabbar-buffer-list-function))))
-    (catch 'done
-      (mapc
-        #'(lambda (group)
-          (when (equal group-name (format "%s" (car (car (cdr (cdr group))))))
-            (throw 'done (switch-to-buffer (car (cdr group))))))
-        tab-buffer-list) )))
-
-
-;; Change padding of the tabs
-;; we also need to set separator to avoid overlapping tabs by highlighted tabs
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(git-gutter:update-interval 2)
- '(package-selected-packages
-   '(mood-line-mode moody minions doom-modeline mood-line telephone-line eglot counsel company-fuzzy visual-regexp-steroids visual-regexp emmet-mode smart-tab highlight-symbol gdscript-mode xonsh-mode arduino-mode scad-mode dash-functional dash-functionnal dash spinner company-lsp emacs-w3m w3m csharp-mode nim nim-mode hydra fira-code yasnippet-snippet yasnippet-snippets processing-mode irony racer rust-mode swiper multiple-cursors sublimity markdown-mode dired-hacks-utils dired-hacks magit smooth-scroll smooth-scrolling tabbar git-gutter-fringe tss git-gutter helm projectile vscode-icon dired-sidebar undo-tree color-theme web-mode js2-mode use-package)))
-;; adding spaces
-(defun tabbar-buffer-tab-label (tab)
-  "Return a label for TAB.
-That is, a string used to represent it on the tab bar."
-  (let ((label  (if tabbar--buffer-show-groups
-                    (format "[%s]  " (tabbar-tab-tabset tab))
-                  (format "%s  " (tabbar-tab-value tab)))))
-    ;; Unless the tab bar auto scrolls to keep the selected tab
-    ;; visible, shorten the tab label to keep as many tabs as possible
-    ;; in the visible area of the tab bar.
-    (if tabbar-auto-scroll-flag
-        label
-      (tabbar-shorten
-       label (max 1 (/ (window-width)
-                       (length (tabbar-view
-                                (tabbar-current-tabset)))))))))
-
-
-(add-hook 'first-change-hook 'ztl-on-buffer-modification)
+(use-package centaur-tabs
+  :ensure t
+  :demand
+  :config
+  (centaur-tabs-mode t)
+  (setq centaur-tabs-set-bar 'under)
+  (setq x-underline-at-descent-line t)
+  (setq centaur-tabs-set-modified-marker t)
+  (setq centaur-tabs-cycle-scope 'tabs)
+  (adelrune/centaur-tabs-group-by-projectile-project)
+  :bind
+  ("C-<prior>" . centaur-tabs-backward)
+  ("C-<next>" . centaur-tabs-forward)
+  ("C-S-<prior>" . centaur-tabs-move-current-tab-to-left)
+  ("C-S-<next>" . centaur-tabs-move-current-tab-to-right))
 
 (defun adelrune/avy-goto-char-timer-flash ()
   (interactive)
   (progn
-  (avy-goto-char-timer)
-  (pulse-momentary-highlight-one-line (point))))
+    (call-interactively 'avy-goto-char-2)
+    (pulse-momentary-highlight-one-line (point))))
+
+
+(use-package avy
+  :bind
+  ("C-SPC" . adelrune/avy-goto-char-timer-flash)
+  ("C-c l" . avy-goto-line))
+
+(use-package embark)
 
 (use-package racer)
 (add-hook 'rust-mode-hook #'racer-mode)
 (add-hook 'racer-mode-hook #'eldoc-mode)
 (add-hook 'racer-mode-hook #'company-mode)
-
-(use-package avy
-  :bind
-  ("C-SPC" . adelrune/avy-goto-char-timer-flash)
-  ("C-c l" . avy-goto-line)
-  :config
-  (setq avy-timeout-seconds 0.3)
-  )
 
 (use-package yasnippet
   :config
@@ -671,22 +586,19 @@ That is, a string used to represent it on the tab bar."
 
 (use-package projectile
   :ensure t
-  :config
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  :bind
+  ("C-<dead-cedilla>" . projectile-switch-to-buffer)
+  :init
   (projectile-mode +1))
 
 (use-package helm-projectile
   :config
   (helm-projectile-on)
   :bind
-  ("C-p" . helm-projectile-find-file)
-  ("C-S-f" . helm-projectile-grep))
+  ("C-p" . helm-projectile-find-file))
 
 (use-package helm-flx)
 (helm-flx-mode 1)
-
-(use-package helm-fuzzier)
-(helm-fuzzier-mode 1)
 
 (use-package vscode-icon
   :ensure t
@@ -710,6 +622,23 @@ That is, a string used to represent it on the tab bar."
   (setq dired-sidebar-use-term-integration t)
   (setq dired-sidebar-use-custom-font t))
 
+(use-package ibuffer)
+
+(use-package ibuffer-projectile)
+
+(add-hook 'ibuffer-hook
+    (lambda ()
+      (ibuffer-projectile-set-filter-groups)
+      (unless (eq ibuffer-sorting-mode 'alphabetic)
+        (ibuffer-do-sort-by-alphabetic))))
+
+(use-package ibuffer-sidebar
+  :ensure t
+  :bind (("C-x C-b" . ibuffer-sidebar-toggle-sidebar))
+  :ensure nil
+  :commands (ibuffer-sidebar-toggle-sidebar))
+
+;; (use-package sr-speedbar)
 
 ;;(use-package perspective)
 ;;(persp-mode)
@@ -717,32 +646,70 @@ That is, a string used to represent it on the tab bar."
 ;;(use-package persp-projectile)
 
 
-(use-package persp-mode
-  :init
-  (setq persp-autokill-buffer-on-remove 'kill-weak)
+;; (use-package persp-mode
+;;   :init
+;;   (setq persp-autokill-buffer-on-remove 'kill-weak)
+;;   :config
+;;   (persp-mode 1)
+;;   )
+
+;; (use-package persp-mode-projectile-bridge
+;;   :config
+;;   (add-hook 'persp-mode-projectile-bridge-mode-hook
+;;             #'(lambda ()
+;;                 (if persp-mode-projectile-bridge-mode
+;;                     (persp-mode-projectile-bridge-find-perspectives-for-all-buffers)
+;;                   (persp-mode-projectile-bridge-kill-perspectives))))
+;;   (persp-mode-projectile-bridge-mode 1)
+;;  )
+
+(use-package yaml-mode)
+(use-package json-mode)
+
+(use-package web-mode
   :config
-  (persp-mode 1)
+  (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.jsx?$" . web-mode))
+  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
   )
 
-(use-package persp-mode-projectile-bridge
+(defun my-web-mode-hook ()
+  "Hooks for Web mode."
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+)
+(add-hook 'web-mode-hook  'my-web-mode-hook)
+(add-hook 'web-mode-hook  'flycheck-mode)
+
+(use-package flycheck
+  :ensure t
+  :init
   :config
-  (add-hook 'persp-mode-projectile-bridge-mode-hook
-            #'(lambda ()
-                (if persp-mode-projectile-bridge-mode
-                    (persp-mode-projectile-bridge-find-perspectives-for-all-buffers)
-                  (persp-mode-projectile-bridge-kill-perspectives))))
-  (persp-mode-projectile-bridge-mode 1)
+  (flycheck-add-mode 'javascript-standard 'web-mode)
   )
+;; haaaaack
+;; (add-hook 'eglot--managed-mode-hook (lambda () (flymake-mode -1)))
+
+;; (add-to-list 'eglot-server-programs '(web-mode "typescript-language-server"))
 
 
 ;; gets rid of stupid emac buffer on first project switch
 (defun adelrune/switch-project ()
   (interactive)
   ;; helm-projectile-switch-project doesn't exist before a call to helm-projectile ?!?!?
-  (progn (if (fboundp 'helm-projectile-switch-project)
-      (helm-projectile-switch-project)
-      (helm-projectile))
-         (switch-tab-group "user")))
+
+  (progn
+    (helm-projectile-on)
+    (helm-projectile-switch-project)
+    (helm-projectile)))
 
 ;; thanks ergoemacs person
 (defun adelrune--read-lines (filePath)
@@ -763,8 +730,7 @@ That is, a string used to represent it on the tab bar."
                     (find-file (expand-file-name filename project-root)))
                   init-files))
       (if (file-exists-p readme-path)
-          (find-file readme-path)
-        (helm-projectile-find-file)))))
+          (find-file readme-path)))))
 
 (setq projectile-switch-project-action 'adelrune/projectile-open-default-file)
 
@@ -791,7 +757,7 @@ That is, a string used to represent it on the tab bar."
 (bind-key* "C-S-k" 'adelrune/ruthlessly-kill-lines)
 
 (when (display-graphic-p)
-  (scroll-bar-mode -1)
+  (scroll-bar-mode 1)
   (tool-bar-mode -1))
 ;;; This is weird in console but whatever.
 (menu-bar-mode -1)
@@ -803,26 +769,19 @@ That is, a string used to represent it on the tab bar."
 (setq show-paren-delay 0)
 (column-number-mode)
 (defalias 'yes-or-no-p 'y-or-n-p)
-(use-package color-theme)
-
-(use-package js2-mode
-  :ensure t)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-
-(use-package
-  :ensure t)
 
 (defun adelrune/make-emmet-work-in-web-mode ()
   (interactive)
   (if (equal major-mode 'mhtml-mode)
     (emmet-expand-yas)
     (yas-expand)))
-(bind-key* "<C-return>" 'adelrune/make-emmet-work-in-web-mode)
-
+(define-key cua-global-keymap (kbd "<C-return>") 'adelrune/make-emmet-work-in-web-mode)
 
 (use-package monokai-theme)
+(use-package color-theme-sanityinc-tomorrow)
+
 (load-theme 'monokai t)
-;(load-theme 'monokai-alt t)
+;; (load-theme 'sanityinc-tomorrow-night t)
 (defvar killed-file-list nil
   "List of recently killed files.")
 
@@ -1037,6 +996,42 @@ That is, a string used to represent it on the tab bar."
 (use-package visual-regexp-steroids
   :bind ("C-c r" . 'vr/query-replace))
 
+(use-package magit
+  :config
+  (setq magit-display-buffer-function
+        (lambda (buffer)
+          (display-buffer
+           buffer (if (and (derived-mode-p 'magit-mode)
+                           (memq (with-current-buffer buffer major-mode)
+                                 '(magit-process-mode
+                                   magit-revision-mode
+                                   magit-diff-mode
+                                   magit-stash-mode
+                                   magit-status-mode)))
+                      nil
+                    '(display-buffer-same-window))))))
+
+(use-package deadgrep :ensure t
+  :bind )
+
+;; thanks https://github.com/Wilfred/deadgrep/issues/66#issuecomment-743785822
+(defun pp/deadgrep-view-file ()
+  "View result under cursor in other window."
+  (interactive)
+  (deadgrep-visit-result-other-window)
+  (other-window 1))
+
+(use-package deadgrep
+  :bind
+  ("<f5>" . deadgrep)
+  (:map deadgrep-mode-map
+              ("v" . pp/deadgrep-view-file)))
+
+;; https://superuser.com/questions/306272/disable-emacs-auto-indentation-for-javascript-mode-completely
+(defun fix-js-indendation-mode-hook ()
+  (local-set-key (kbd "RET") '(lambda () (interactive) (newline 1))))
+(add-hook 'js-mode-hook 'fix-js-indendation-mode-hook)
+(add-hook 'web-mode-hook 'fix-js-indendation-mode-hook)
 
 (defun adelrune/new-file ()
                   (interactive)
@@ -1135,7 +1130,26 @@ and M-n or M-<down> for moving down."
 (put 'upcase-region 'disabled nil)
 
 
+(defun adelrune/run-leitmotiv ()
+  (interactive)
+  (progn
+    (shell-command (concat
+                    "python /home/guillaume/code/leitmotiv/leitmotiv.py "
+                    (buffer-file-name)))
+    (revert-buffer :ignore-auto :noconfirm)
+    (if (not (boundp 'iimage-mode))
+        (iimage-mode))
+    (iimage-recenter)))
+
 (defun eval-trad-list ()
   (interactive)
   (message-box (shell-command-to-string "python3 /home/guillaume/Documents/partitions/itm/itm_utils.py")))
 (put 'downcase-region 'disabled nil)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
+ '(warning-suppress-log-types '((comp))))

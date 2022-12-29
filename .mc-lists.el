@@ -9,15 +9,29 @@
         adelrune/backward-word
         adelrune/begin-line
         adelrune/expand-dong
+        adelrune/forward-kill-symbol
+        adelrune/forward-kill-word
         adelrune/forward-symbol
         adelrune/forward-word
+        adelrune/good-comment
         adelrune/ruthlessly-kill-lines
         backward-sexp
+        c-electric-brace
+        c-electric-colon
+        c-electric-lt-gt
+        c-electric-paren
+        c-electric-pound
+        c-electric-semi&comma
+        cua-copy-region
+        cua-copy-region
+        cua-copy-region
         cua-copy-region
         cua-copy-region
         cua-paste
         forward-sexp
         ignore
+        json-increment-number-at-point
+        smart-tab
         ))
 
 (setq mc/cmds-to-run-once
@@ -27,8 +41,12 @@
         adelrune/save
         cua--prefix-override-handler
         cua--prefix-override-handler
+        cua--prefix-override-handler
+        cua--prefix-override-handler
+        cua--prefix-override-handler
         custom/copy-across-cursors
         helm-confirm-and-exit-minibuffer
+        multiple-cursors-mode
         tabbar-backward-tab
         tabbar-forward-tab
         ))

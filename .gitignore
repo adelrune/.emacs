@@ -4,6 +4,7 @@ anaconda-mode
 auto-save-list
 elpa
 .projectile
+eln-cache
 *.~*~
 *.*~
 ido.last
