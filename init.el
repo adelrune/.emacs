@@ -138,6 +138,9 @@
   :diminish company-mode
   :config
 
+  ;; stops company from downcasing in comments and plain text
+  (setq company-dabbrev-downcase nil)
+
   ;; Turn on Company everywhere.
   (global-company-mode 1)
 
@@ -370,13 +373,19 @@
 (bind-key* "C-s" 'adelrune/save)
 (bind-key* "C-q" 'adelrune/begin-line)
 (bind-key* "C-a" 'mark-whole-buffer)
-;; (bind-key* "C-w" 'kill-buffer)
 (bind-key* "C-w" 'kill-current-buffer)
 (bind-key* "M-n" 'next-buffer)
 (bind-key* "M-p" 'previous-buffer)
-;; (bind-key* "C-<prior>" 'previous-buffer)
-;; (bind-key* "C-<next>" 'next-buffer)
 
+(defun adelrune/recenter-top-bottom ()
+  (interactive)
+  (progn
+    (recenter-top-bottom)
+    (pulse-momentary-highlight-one-line (point))))
+(bind-key* "C-l" 'adelrune/recenter-top-bottom)
+
+
+(pulse-momentary-highlight-one-line (point))
 
 (defun adelrune/dumb-jump-go-flash ()
   (interactive)
@@ -555,17 +564,49 @@ Git gutter:
   ("C-S-<prior>" . centaur-tabs-move-current-tab-to-left)
   ("C-S-<next>" . centaur-tabs-move-current-tab-to-right))
 
-(defun adelrune/avy-goto-char-timer-flash ()
+(defun adelrune/avy-goto-char-flash ()
   (interactive)
   (progn
     (call-interactively 'avy-goto-char-2)
     (pulse-momentary-highlight-one-line (point))))
 
 
+
+(defmacro gabc/avy-define-do-the-thing-no-move (the-thing &rest body)
+  `(defun ,the-thing (pt)
+     (save-excursion
+       (goto-char pt)
+       ,@body)
+     (select-window
+      (cdr
+       (ring-ref avy-ring 0)))
+     t))
+
+(defmacro adelrune/avy-define-do-the-thing (the-thing &rest body)
+  `(defun ,the-thing (pt)
+     (goto-char pt)
+     ,@body
+     t))
+
+(gabc/avy-define-do-the-thing-no-move adelrune/avy-action-ruthlessly-kill-line (adelrune/ruthlessly-kill-lines))
+(gabc/avy-define-do-the-thing-no-move adelrune/avy-action-comment-line (adelrune/good-comment))
+(adelrune/avy-define-do-the-thing adelrune/avy-action-dumb-jump (dumb-jump-go))
+(gabc/avy-define-do-the-thing-no-move adelrune/avy-action-copy-symbol (kill-new (thing-at-point 'symbol)))
+
 (use-package avy
   :bind
-  ("C-SPC" . adelrune/avy-goto-char-timer-flash)
-  ("C-c l" . avy-goto-line))
+  ("C-SPC" . adelrune/avy-goto-char-flash)
+  ("C-c l" . avy-goto-line)
+  :config
+  (setq avy-background t)
+  ;; redefined for reference
+  ;; (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  (setq avy-keys (nconc (number-sequence ?a ?z)
+                      (number-sequence ?A ?Z)))
+  (setf (alist-get ?\C-\S-K avy-dispatch-alist) 'adelrune/avy-action-ruthlessly-kill-line
+        (alist-get ?\C-\M-c avy-dispatch-alist) 'adelrune/avy-action-comment-line
+        (alist-get ?\C-c avy-dispatch-alist) 'adelrune/avy-action-copy-symbol
+        (alist-get ?\C-r avy-dispatch-alist) 'adelrune/avy-action-dumb-jump))
 
 (use-package embark)
 
@@ -708,8 +749,7 @@ Git gutter:
 
   (progn
     (helm-projectile-on)
-    (helm-projectile-switch-project)
-    (helm-projectile)))
+    (helm-projectile-switch-project)))
 
 ;; thanks ergoemacs person
 (defun adelrune--read-lines (filePath)
@@ -778,7 +818,7 @@ Git gutter:
 (define-key cua-global-keymap (kbd "<C-return>") 'adelrune/make-emmet-work-in-web-mode)
 
 (use-package monokai-theme)
-(use-package color-theme-sanityinc-tomorrow)
+;; (use-package color-theme-sanityinc-tomorrow)
 
 (load-theme 'monokai t)
 ;; (load-theme 'sanityinc-tomorrow-night t)
@@ -804,9 +844,9 @@ Git gutter:
 
 (use-package highlight-symbol
   :config
-   (setq highlight-symbol-idle-delay 0.01)
-   :bind ("C-S-d" . highlight-symbol-next)
-  )
+   (setq highlight-symbol-idle-delay 0.1)
+   :bind ("C-S-d" . highlight-symbol-next))
+
 (highlight-symbol-mode)
 (face-spec-set 'highlight-symbol-face
                   '((((class color) (background dark))
