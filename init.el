@@ -283,8 +283,6 @@
 ;; (add-hook 'js2-mode-hook (lambda ()
                            ;; (tern-mode)))
 (use-package sublimity)
-;; (add-to-list 'initial-frame-alist '(font . "Fira Code-12"))
-;; (add-to-list 'default-frame-alist '(font . "Fira Code-12"))
 
 (sublimity-mode 1)
 (setq scroll-conservatively 10000)
@@ -376,6 +374,7 @@
 (bind-key* "C-w" 'kill-current-buffer)
 (bind-key* "M-n" 'next-buffer)
 (bind-key* "M-p" 'previous-buffer)
+(global-unset-key (kbd "M-c"))
 
 (defun adelrune/recenter-top-bottom ()
   (interactive)
@@ -488,6 +487,8 @@ Git gutter:
    ))
   :config
   (setq-default helm-M-x-fuzzy-match t)
+  ;; wtf helm pingin random machines because of stupid ffap defaults ?? stop that please
+  (setq ffap-machine-p-known 'reject)
   (progn
     (require 'helm-config)
     (helm-mode 1)
@@ -592,6 +593,9 @@ Git gutter:
 (gabc/avy-define-do-the-thing-no-move adelrune/avy-action-comment-line (adelrune/good-comment))
 (adelrune/avy-define-do-the-thing adelrune/avy-action-dumb-jump (dumb-jump-go))
 (gabc/avy-define-do-the-thing-no-move adelrune/avy-action-copy-symbol (kill-new (thing-at-point 'symbol)))
+(gabc/avy-define-do-the-thing-no-move adelrune/avy-action-copy-symbol (kill-new (thing-at-point 'symbol)))
+(adelrune/avy-define-do-the-thing adelrune/avy-action-counsel-rg-symbol (counsel-rg(thing-at-point 'symbol)))
+
 
 (use-package avy
   :bind
@@ -606,7 +610,8 @@ Git gutter:
   (setf (alist-get ?\C-\S-K avy-dispatch-alist) 'adelrune/avy-action-ruthlessly-kill-line
         (alist-get ?\C-\M-c avy-dispatch-alist) 'adelrune/avy-action-comment-line
         (alist-get ?\C-c avy-dispatch-alist) 'adelrune/avy-action-copy-symbol
-        (alist-get ?\C-r avy-dispatch-alist) 'adelrune/avy-action-dumb-jump))
+        (alist-get ?\C-r avy-dispatch-alist) 'adelrune/avy-action-dumb-jump
+        (alist-get ?\C-\S-f avy-dispatch-alist) 'adelrune/avy-action-counsel-rg-symbol))
 
 (use-package embark)
 
@@ -820,8 +825,24 @@ Git gutter:
 (use-package monokai-theme)
 ;; (use-package color-theme-sanityinc-tomorrow)
 
-(load-theme 'monokai t)
+;; (load-theme 'monokai t)
 ;; (load-theme 'sanityinc-tomorrow-night t)
+
+(use-package doom-themes
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  ;; (load-theme 'doom-laserwave t)
+  ;; (load-theme 'doom-spacegrey t)
+  ;; (load-theme 'doom-one t)
+
+  (load-theme 'doom-solarized-dark-high-contrast t))
+
+(add-to-list 'initial-frame-alist '(font . "Fira Code-12"))
+(add-to-list 'default-frame-alist '(font . "Fira Code-12"))
+
 (defvar killed-file-list nil
   "List of recently killed files.")
 
@@ -864,6 +885,7 @@ Git gutter:
       (save-excursion (comment-line 1)))))
 
 (bind-key* "C-M-c" 'adelrune/good-comment)
+(bind-key* "M-c" 'adelrune/good-comment)
 
 ;; All of this shit is to simulate sublime's way of dealing with shift
 (global-subword-mode 1)
@@ -977,6 +999,8 @@ Git gutter:
 (bind-key* "M-<right>" 'adelrune/forward-word)
 (bind-key* "M-<left>" 'adelrune/backward-word)
 (bind-key* "M-<delete>" 'adelrune/forward-kill-word)
+(define-key global-map [(insert)] nil)
+
 (defun adelrune/next-win ()
     (interactive)
   (other-window 1))
@@ -1050,6 +1074,20 @@ Git gutter:
                                    magit-status-mode)))
                       nil
                     '(display-buffer-same-window))))))
+
+(use-package blamer
+  :ensure t
+  :defer 20
+  :custom
+  (blamer-idle-time 2)
+  (blamer-min-offset 70)
+  :custom-face
+  (blamer-face ((t :foreground "#686857"
+                    :background nil
+                    :height 110
+                    :italic t)))
+  :config
+  (global-blamer-mode 1))
 
 (use-package deadgrep :ensure t
   :bind )
@@ -1191,5 +1229,5 @@ and M-n or M-<down> for moving down."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
+   '(doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
  '(warning-suppress-log-types '((comp))))

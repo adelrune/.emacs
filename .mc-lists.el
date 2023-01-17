@@ -3,6 +3,7 @@
 
 (setq mc/cmds-to-run-for-all
       '(
+        adelrune/avy-goto-char-timer-flash
         adelrune/backward-kill-symbol
         adelrune/backward-kill-word
         adelrune/backward-symbol
@@ -14,6 +15,7 @@
         adelrune/forward-symbol
         adelrune/forward-word
         adelrune/good-comment
+        adelrune/recenter-top-bottom
         adelrune/ruthlessly-kill-lines
         backward-sexp
         c-electric-brace
@@ -39,6 +41,7 @@
         adelrune/helm-M-x
         adelrune/mc-mark-next-symbol
         adelrune/save
+        centaur-tabs-forward
         cua--prefix-override-handler
         cua--prefix-override-handler
         cua--prefix-override-handler
