@@ -33,6 +33,9 @@
         forward-sexp
         ignore
         json-increment-number-at-point
+        markdown-enter-key
+        markdown-outdent-or-delete
+        mouse-set-region
         smart-tab
         ))
 
@@ -48,6 +51,7 @@
         cua--prefix-override-handler
         cua--prefix-override-handler
         custom/copy-across-cursors
+        helm-buffers-list
         helm-confirm-and-exit-minibuffer
         multiple-cursors-mode
         tabbar-backward-tab

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: fmt-print
+# key: fmtp
+# --
+
+fmt::print("$1: {}\n", ${1:object});

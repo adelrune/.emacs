@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: fmt-print-string
+# key: print
+# --
+
+fmt::print("$1\n");

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: claw_mosaique
+# key: claw
+# --
+claw<MPtr(&quiddity::claw::Claw::$1)>($2)

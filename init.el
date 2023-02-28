@@ -1,5 +1,7 @@
 (require 'package)
 
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp"))
+
 (setq desktop-path '("~/"))
 (desktop-save-mode 1)
 
@@ -24,18 +26,17 @@
 (set-face-attribute 'region nil :extend nil)
 
 ;; cua mode
-
 (cua-mode)
 
-;; stop putting filname~ crap everywhere
-(setq
-   backup-by-copying t      ; don't clobber symlinks
-   backup-directory-alist
-    '(("." . "~/.saves/"))    ; don't litter my fs tree
-   delete-old-versions t
-   kept-new-versions 6
-   kept-old-versions 2
-   version-control t)       ; use versioned backups
+(use-package rainbow-delimiters)
+
+;; gets rid of all the silly auxiliary files
+(setq lock-file-name-transforms
+      '(("\\`/.*/\\([^/]+\\)\\'" "~/.emacs.d/aux/\\1" t)))
+(setq auto-save-file-name-transforms
+      '(("\\`/.*/\\([^/]+\\)\\'" "~/.emacs.d/aux/\\1" t)))
+(setq backup-directory-alist
+      '((".*" . "~/.emacs.d/aux/")))
 
 
 ;; undo stuff
@@ -191,8 +192,10 @@
 
 (use-package doom-modeline
   :init
+  (doom-modeline-mode 1)
+  :config
   (setq doom-modeline-minor-modes t)
-  (doom-modeline-mode 1))
+  (setq doom-modeline-vcs-max-length 50))
 
 (use-package minions
   :init
@@ -246,6 +249,13 @@
     ;; :ensure t)
 
 (use-package multi-vterm :ensure t)
+(define-key vterm-mode-map (kbd "C-x") #'vterm-send-C-x)
+(define-key vterm-mode-map (kbd "C-l") #'vterm-send-C-l)
+
+
+(setq-default header-line-format mode-line-format)
+(setq-default mode-line-format nil)
+
 
 (use-package xonsh-mode)
 
@@ -254,7 +264,7 @@
 
 (use-package eglot)
 
-;; (use-package lsp-mode)
+(use-package lsp-mode)
 
 (defun m/projectile-project-find-function (dir)
   (let ((root (projectile-project-root dir)))
@@ -339,6 +349,12 @@
                       (if (> (mc/num-cursors) 1)
                           (kill-ring-save 0 0 t)
                         (apply oldfn args))))
+;; thanks https://stackoverflow.com/a/40390199
+;; don't destroy other windows with keyboard-escape-quit
+(defadvice keyboard-escape-quit
+  (around keyboard-escape-quit-dont-close-windows activate)
+  (let ((buffer-quit-function (lambda () ())))
+    ad-do-it))
 
 (defun adelrune/kb-escape-quit ()
   (interactive)
@@ -374,6 +390,8 @@
 (bind-key* "C-w" 'kill-current-buffer)
 (bind-key* "M-n" 'next-buffer)
 (bind-key* "M-p" 'previous-buffer)
+(bind-key* "S-<prior>"  '(lambda () (interactive) (scroll-down 2)))
+(bind-key* "S-<next>"  '(lambda () (interactive) (scroll-up 2)))
 (global-unset-key (kbd "M-c"))
 
 (defun adelrune/recenter-top-bottom ()
@@ -494,6 +512,7 @@ Git gutter:
     (helm-mode 1)
     (setq helm-quick-update                     t ; do not display invisible candidates
           helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+          helm-window-prefer-horizontal-split   t
           helm-buffers-fuzzy-matching           t ; fuzzy matching buffer names when non--nil
           helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
           helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
@@ -522,56 +541,32 @@ Git gutter:
     :bind
   ("C-f" . swiper))
 
+;; (require 'beacon)
+;; (beacon-mode 1)
+;; (beacon-blink)
+;; (setq beacon-blink-duration 0.1)
+;; (setq beacon-blink-delay 0)
+;; (setq beacon-size 200)
+(defmacro adelrune/flash-when-scroll (the-thing &rest body)
+  `(defun ,the-thing ()
+     (interactive)
+     (let ((win-start (window-start)) (win-end (window-end)))
+         ,@body
+         ;; if window moved, flash cursor.
+         (if (or (< (window-point) win-start) (> (window-point) win-end))
+             (pulse-momentary-highlight-one-line (point))))))
 
-(defun adelrune/centaur-tabs-projectile-buffer-groups ()
-  "Return the list of group names BUFFER belongs to."
-  (if centaur-tabs-projectile-buffer-group-calc
-      (symbol-value 'centaur-tabs-projectile-buffer-group-calc)
-    (set (make-local-variable 'centaur-tabs-projectile-buffer-group-calc)
+(adelrune/flash-when-scroll adelrune/backward-paragraph (call-interactively 'backward-paragraph))
+(adelrune/flash-when-scroll adelrune/forward-paragraph (call-interactively 'forward-paragraph))
 
-	 (cond
-	  ((condition-case _err
-	       (projectile-project-root)
-	     (error nil)) (list (projectile-project-name)))
-	  ((memq major-mode '(emacs-lisp-mode python-mode emacs-lisp-mode c-mode
-					      c++-mode javascript-mode js-mode
-					      js2-mode makefile-mode
-					      lua-mode vala-mode)) '("Coding"))
-	  ((memq major-mode '(nxhtml-mode html-mode
-					  mhtml-mode css-mode)) '("HTML"))
-	  ((memq major-mode '(org-mode calendar-mode diary-mode)) '("Org"))
-	  ((memq major-mode '(dired-mode)) '("Dir"))
-	  (t '("Other"))))
-    (symbol-value 'centaur-tabs-projectile-buffer-group-calc)))
-(defun adelrune/centaur-tabs-group-by-projectile-project()
-  "Group by projectile project."
-  (interactive)
-  (setq centaur-tabs-buffer-groups-function 'adelrune/centaur-tabs-projectile-buffer-groups)
-  (centaur-tabs-display-update))
-
-(use-package centaur-tabs
-  :ensure t
-  :demand
-  :config
-  (centaur-tabs-mode t)
-  (setq centaur-tabs-set-bar 'under)
-  (setq x-underline-at-descent-line t)
-  (setq centaur-tabs-set-modified-marker t)
-  (setq centaur-tabs-cycle-scope 'tabs)
-  (adelrune/centaur-tabs-group-by-projectile-project)
-  :bind
-  ("C-<prior>" . centaur-tabs-backward)
-  ("C-<next>" . centaur-tabs-forward)
-  ("C-S-<prior>" . centaur-tabs-move-current-tab-to-left)
-  ("C-S-<next>" . centaur-tabs-move-current-tab-to-right))
+(bind-key* "C-<up>" 'adelrune/backward-paragraph)
+(bind-key* "C-<down>" 'adelrune/forward-paragraph)
 
 (defun adelrune/avy-goto-char-flash ()
   (interactive)
   (progn
     (call-interactively 'avy-goto-char-2)
     (pulse-momentary-highlight-one-line (point))))
-
-
 
 (defmacro gabc/avy-define-do-the-thing-no-move (the-thing &rest body)
   `(defun ,the-thing (pt)
@@ -837,8 +832,13 @@ Git gutter:
   ;; (load-theme 'doom-laserwave t)
   ;; (load-theme 'doom-spacegrey t)
   ;; (load-theme 'doom-one t)
-
   (load-theme 'doom-solarized-dark-high-contrast t))
+
+(defun minibuffer-bg ()
+  (let ((darkened-bg (color-darken-name (face-attribute 'default :background) 2) ))
+         (set (make-local-variable 'face-remapping-alist)
+              (list (list 'default :background darkened-bg)))))
+(add-hook 'minibuffer-setup-hook 'minibuffer-bg)
 
 (add-to-list 'initial-frame-alist '(font . "Fira Code-12"))
 (add-to-list 'default-frame-alist '(font . "Fira Code-12"))
@@ -1089,6 +1089,8 @@ Git gutter:
   :config
   (global-blamer-mode 1))
 
+(setq blamer-max-commit-message-length 100)
+
 (use-package deadgrep :ensure t
   :bind )
 
@@ -1228,6 +1230,8 @@ and M-n or M-<down> for moving down."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("2f8eadc12bf60b581674a41ddc319a40ed373dd4a7c577933acaff15d2bf7cc6" default))
  '(package-selected-packages
-   '(doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
+   '(ws-butler rainbow-delimiters rainbow-delimiter-mode beacon-mode doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
  '(warning-suppress-log-types '((comp))))
