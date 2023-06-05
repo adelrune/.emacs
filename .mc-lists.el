@@ -12,6 +12,7 @@
         adelrune/expand-dong
         adelrune/forward-kill-symbol
         adelrune/forward-kill-word
+        adelrune/forward-paragraph
         adelrune/forward-symbol
         adelrune/forward-word
         adelrune/good-comment
@@ -24,13 +25,18 @@
         c-electric-paren
         c-electric-pound
         c-electric-semi&comma
+        c-electric-slash
+        c-electric-star
         cua-copy-region
         cua-copy-region
         cua-copy-region
         cua-copy-region
         cua-copy-region
+        cua-cut-region
         cua-paste
+        downcase-region
         forward-sexp
+        helm-show-kill-ring
         ignore
         json-increment-number-at-point
         markdown-enter-key

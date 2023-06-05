@@ -27,6 +27,7 @@
 
 ;; cua mode
 (cua-mode)
+(use-package phi-grep)
 
 (use-package rainbow-delimiters)
 
@@ -136,14 +137,14 @@
           ;; make sure that no minor modes override this keybinding.
           ("M-TAB" . adelrune/company-manual-begin-fuzzy))
 
-  :diminish company-mode
+  ;; :diminish company-mode
   :config
 
   ;; stops company from downcasing in comments and plain text
   (setq company-dabbrev-downcase nil)
 
   ;; Turn on Company everywhere.
-  (global-company-mode 1)
+  ;; (global-company-mode)
 
   ;; Show completions instantly, rather than after half a second.
   (setq company-idle-delay 0.2)
@@ -526,11 +527,10 @@ Git gutter:
 (defun adelrune/gimme-gimme-a-region-value-after-midnight ()
   (substring-no-properties (buffer-substring (region-beginning) (region-end))))
 
-(defun adelrune/counsel-rg-take-the-right-thing-plz (beginning end)
-  ; interactive r adds beginning and end of region arguments
-  (interactive "r")
+(defun adelrune/counsel-rg-take-the-right-thing-plz ()
+  (interactive)
   (if (use-region-p)
-      (counsel-rg (adelrune/gimme-gimme-a-region-value-after-midnight) )
+      (counsel-rg (adelrune/gimme-gimme-a-region-value-after-midnight))
     (counsel-rg(thing-at-point 'symbol))))
 
 (use-package counsel
@@ -840,8 +840,8 @@ Git gutter:
               (list (list 'default :background darkened-bg)))))
 (add-hook 'minibuffer-setup-hook 'minibuffer-bg)
 
-(add-to-list 'initial-frame-alist '(font . "Fira Code-12"))
-(add-to-list 'default-frame-alist '(font . "Fira Code-12"))
+(add-to-list 'initial-frame-alist '(font . "Fantasque Sans Mono-14"))
+(add-to-list 'default-frame-alist '(font . "Fantasque Sans Mono-14"))
 
 (defvar killed-file-list nil
   "List of recently killed files.")
@@ -1085,10 +1085,8 @@ Git gutter:
   (blamer-face ((t :foreground "#686857"
                     :background nil
                     :height 110
-                    :italic t)))
-  :config
-  (global-blamer-mode 1))
-
+                    :italic t))))
+(global-blamer-mode 1)
 (setq blamer-max-commit-message-length 100)
 
 (use-package deadgrep :ensure t
@@ -1233,5 +1231,6 @@ and M-n or M-<down> for moving down."
  '(custom-safe-themes
    '("2f8eadc12bf60b581674a41ddc319a40ed373dd4a7c577933acaff15d2bf7cc6" default))
  '(package-selected-packages
-   '(ws-butler rainbow-delimiters rainbow-delimiter-mode beacon-mode doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
+   '(prism phi-grep ws-butler rainbow-delimiters rainbow-delimiter-mode beacon-mode doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
  '(warning-suppress-log-types '((comp))))
+(put 'scroll-left 'disabled nil)
