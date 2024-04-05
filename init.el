@@ -233,7 +233,7 @@
 (global-set-key (kbd "<escape>") 'adelrune/kb-escape-quit)
 (bind-key* "C-g" 'goto-line)
 (bind-key* "C-S-s" 'adelrune/save-as)
-(bind-key* "C-s" 'adelrune/save)
+(global-set-key (kbd "C-s") 'adelrune/save)
 (bind-key* "C-q" 'adelrune/begin-line)
 (bind-key* "C-a" 'mark-whole-buffer)
 (bind-key* "C-w" 'kill-current-buffer)
@@ -688,11 +688,15 @@ Git gutter:
   :custom
   (corfu-auto t)
   (corfu-auto-prefix 2)
-  (corfu-auto-delay 0)
+  (corfu-auto-delay 0.15)
   :bind
   (:map corfu-map
         ("RET" . nil)
-        ("<escape>" . corfu-quit))
+        ("<escape>" . corfu-quit)
+        ("C-s" . (lambda() (interactive)
+                   (progn
+                     (adelrune/save)
+                     (call-interactively 'corfu-quit)))))
   :init
   (setq completion-styles '(orderless basic))
   (global-corfu-mode))
