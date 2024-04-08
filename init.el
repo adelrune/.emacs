@@ -358,7 +358,6 @@ Git gutter:
   ;; wtf helm pingin random machines because of stupid ffap defaults ?? stop that please
   (setq ffap-machine-p-known 'reject)
   (progn
-    (require 'helm-config)
     (helm-mode 1)
     (setq helm-quick-update                     t ; do not display invisible candidates
           helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
