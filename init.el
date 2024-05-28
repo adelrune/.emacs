@@ -225,6 +225,18 @@
   (when (eq major-mode 'c++-mode)
       (setq company-minimum-prefix-length 1)))
 
+(defun adelrune/unfuck-jan-lawa-lili ()
+  (interactive)
+  (progn (call-interactively 'mark-whole-buffer)
+         (call-interactively 'indent-region)
+         (replace-string "   <br/>" "<p data-nanpa-toki=\"\">")
+         (beginning-of-buffer)
+         (replace-string "<p>" "<p data-nanpa-toki=\"\">")
+         (beginning-of-buffer)
+         (replace-string "<br/>" "</p>")
+         (beginning-of-buffer)
+         (call-interactively 'mark-whole-buffer)
+         (call-interactively 'indent-region)))
 
 (defun adelrune/enter-c++-mode-function ()
       (setq company-minimum-prefix-length 4))

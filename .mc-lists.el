@@ -32,6 +32,7 @@
         cua-paste
         forward-sexp
         ignore
+        json-decrement-number-at-point
         json-increment-number-at-point
         markdown-enter-key
         markdown-outdent-or-delete
