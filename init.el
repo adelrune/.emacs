@@ -22,13 +22,14 @@
 (setq tls-checktrust nil)
 (setq gnutls-verify-error nil)
 
-;; region highlight extends only to the end of characters
-(set-face-attribute 'region nil :extend nil)
+(use-package benchmark-init
+  :ensure t
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'after-init-hook 'benchmark-init/deactivate))
 
 ;; cua mode
 (cua-mode)
-
-(use-package rainbow-delimiters)
 
 ;; gets rid of all the silly auxiliary files
 (setq lock-file-name-transforms
@@ -47,15 +48,15 @@
   ("C-y" . 'undo-tree-redo))
 
 (setq undo-tree-enable-undo-in-region nil)
-(setq undo-tree-enable-undo-in-region nil)
+(setq undo-tree-auto-save-history nil)
 (global-undo-tree-mode)
 
 ;; Prevent undo tree files from polluting your git repo
 (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
 
-(setq undo-limit 800000)
-(setq undo-strong-limit 12000000)
-(setq undo-outer-limit 120000000)
+(setq undo-limit 80000)
+(setq undo-strong-limit 120000)
+(setq undo-outer-limit 1200000)
 
 (add-hook 'write-file-hooks 'delete-trailing-whitespace)
 
@@ -72,123 +73,7 @@
 (use-package expand-region
   :bind ("C-=" . 'adelrune/expand-dong))
 
-
-(defun adelrune/company-manual-begin-fuzzy ()
-  (interactive)
-  (progn
-    (company-fuzzy-mode t)
-    (company-manual-begin)
-    (company-fuzzy-mode 0)
-    ))
-
-;; thanks https://github.com/radian-software/radian/blob/223abc524f693504af6ebbc70ad2d84d9a6e2d1b/radian-emacs/radian-autocomplete.el#L6-L182
-(use-package company
-  :demand t
-  :bind (;; Replace `completion-at-point' and `complete-symbol' with
-         ;; `company-manual-begin'. You might think this could be put
-         ;; in the `:bind*' declaration below, but it seems that
-         ;; `bind-key*' does not work with remappings.
-         ([remap completion-at-point] . company-manual-begin)
-         ([remap complete-symbol] . company-manual-begin)
-
-         ;; The following are keybindings that take effect whenever
-         ;; the completions menu is visible, even if the user has not
-         ;; explicitly interacted with Company.
-
-         :map company-active-map
-
-         ;; Make TAB always complete the current selection. Note that
-         ;; <tab> is for windowed Emacs and TAB is for terminal Emacs.
-         ("<tab>" . company-complete-selection)
-         ("TAB" . company-complete-selection)
-
-         ;; Prevent SPC from ever triggering a completion.
-         ("SPC" . nil)
-         ;; keep C-s as save
-         ("C-s" . nil)
-
-         ;; The following are keybindings that only take effect if the
-         ;; user has explicitly interacted with Company.
-
-         :map company-active-map
-         :filter (company-explicit-action-p)
-
-         ;; Make RET trigger a completion if and only if the user has
-         ;; explicitly interacted with Company. Note that <return> is
-         ;; for windowed Emacs and RET is for terminal Emacs.
-         ("<return>" . company-complete-selection)
-         ("RET" . company-complete-selection)
-
-         ;; We then do the same for the up and down arrows. Note that
-         ;; we use `company-select-previous' instead of
-         ;; `company-select-previous-or-abort'. I think the former
-         ;; makes more sense since the general idea of this `company'
-         ;; configuration is to decide whether or not to steal
-         ;; keypresses based on whether the user has explicitly
-         ;; interacted with `company', not based on the number of
-         ;; candidates.
-
-         ("<up>" . company-select-previous)
-         ("<down>" . company-select-next))
-
-  :bind* (;; The default keybinding for `completion-at-point' and
-          ;; `complete-symbol' is M-TAB or equivalently C-M-i. Here we
-          ;; make sure that no minor modes override this keybinding.
-          ("M-TAB" . adelrune/company-manual-begin-fuzzy))
-
-  :diminish company-mode
-  :config
-
-  ;; stops company from downcasing in comments and plain text
-  (setq company-dabbrev-downcase nil)
-
-  ;; Turn on Company everywhere.
-  (global-company-mode 1)
-
-  ;; Show completions instantly, rather than after half a second.
-  (setq company-idle-delay 0.2)
-
-  ;; Show completions after typing a single character, rather than
-  ;; after typing three characters.
-  (setq company-minimum-prefix-length 1)
-
-  ;; Show a maximum of 10 suggestions. This is the default but I think
-  ;; it's best to be explicit.
-  (setq company-tooltip-limit 10)
-
-  ;; Always display the entire suggestion list onscreen, placing it
-  ;; above the cursor if necessary.
-  (setq company-tooltip-minimum company-tooltip-limit)
-
-  ;; Always display suggestions in the tooltip, even if there is only
-  ;; one. Also, don't display metadata in the echo area. (This
-  ;; conflicts with ElDoc.)
-  (setq company-frontends '(company-pseudo-tooltip-frontend))
-
-  ;; Show quick-reference numbers in the tooltip. (Select a completion
-  ;; with M-1 through M-0.)
-  (setq company-show-numbers t)
-
-  ;; Prevent non-matching input (which will dismiss the completions
-  ;; menu), but only if the user interacts explicitly with Company.
-  ;; (setq company-require-match #'company-explicit-action-p)
-  (setq company-require-match nil)
-  ;; Company appears to override our settings in `company-active-map'
-  ;; based on `company-auto-complete-chars'. Turning it off ensures we
-  ;; have full control.
-  (setq company-auto-complete-chars nil))
-
-(use-package company-quickhelp
-  :config
-  (company-quickhelp-mode 1))
-
-
 (use-package flx)
-(use-package company-fuzzy
-  :init
-  (setq company-fuzzy-sorting-backend 'flx
-        company-fuzzy-prefix-on-top nil
-        ))
 
 (use-package doom-modeline
   :init
@@ -201,7 +86,6 @@
   :init
   (minions-mode 1))
 
-
 (use-package nim-mode)
 
 (use-package cmake-mode)
@@ -210,20 +94,6 @@
 
 (add-hook 'c-mode-common-hook 'google-set-c-style)
 (add-hook 'c-mode-common-hook 'google-make-newline-indent)
-
-
-
-(use-package irony
-  :config
-  (add-hook 'c++-mode-hook 'irony-mode)
-  (add-hook 'c-mode-hook 'irony-mode)
-  (add-hook 'objc-mode-hook 'irony-mode)
-
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
-
-(defun adelrune/leave-c++-mode ()
-  (when (eq major-mode 'c++-mode)
-      (setq company-minimum-prefix-length 1)))
 
 (defun adelrune/unfuck-jan-lawa-lili ()
   (interactive)
@@ -238,45 +108,15 @@
          (call-interactively 'mark-whole-buffer)
          (call-interactively 'indent-region)))
 
-(defun adelrune/enter-c++-mode-function ()
-      (setq company-minimum-prefix-length 4))
-
-
-(add-hook 'change-major-mode-hook 'adelrune/leave-c++-mode)
-(add-hook 'c++-mode-hook 'adelrune/enter-c++-mode-function)
-
 (use-package arduino-mode)
 
-(use-package gdscript-mode)
-
 (use-package processing-mode)
-
-;; (use-package jedi-core
-;;   :config
-;;   (setq jedi:environment-virtualenv (list "virtualenv" "--system-site-package" "--quiet" "--python=python3")))
-
-;; (add-to-list 'auto-mode-alist '("\\.pyde\\'" . python-mode))
-
-;; (use-package vterm
-    ;; :ensure t)
-
-(use-package multi-vterm :ensure t)
-(define-key vterm-mode-map (kbd "C-x") #'vterm-send-C-x)
-(define-key vterm-mode-map (kbd "C-l") #'vterm-send-C-l)
-
 
 (setq-default header-line-format mode-line-format)
 (setq-default mode-line-format nil)
 
-
-(use-package xonsh-mode)
-
-;; (use-package company-jedi)
-;; (add-to-list 'company-backends 'company-jedi)
-
-(use-package eglot)
-
-(use-package lsp-mode)
+(use-package which-key :config
+  (which-key-mode))
 
 (defun m/projectile-project-find-function (dir)
   (let ((root (projectile-project-root dir)))
@@ -300,10 +140,18 @@
   (add-to-list 'project-find-functions 'm/projectile-project-find-function))
 
 
-;; (use-package company-tern)
-;; (add-to-list 'company-backends 'company-tern)
-;; (add-hook 'js2-mode-hook (lambda ()
-                           ;; (tern-mode)))
+(use-package cape
+   :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-history)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-abbrev))
+
+(setq-local completion-at-point-functions
+  (mapcar #'cape-company-to-capf
+    (list #'company-files #'company-keywords #'company-dabbrev)))
+
 (use-package sublimity)
 
 (sublimity-mode 1)
@@ -317,13 +165,15 @@
 (defvar multiple-cursors-mode-disabled-hook nil)
 
 (defun on-mc ()
-  (setq-default cursor-type 'block))
+  (setq-default cursor-type 'block)
+  (global-corfu-mode -1))
 (defun off-mc ()
   (setq adelrune/mc-mark-next-marked-a-symbol nil)
+  (global-corfu-mode 1)
   (setq-default cursor-type 'bar))
 
-(add-hook 'multiple-cursors-mode-enabled-hook #'on-mc)
-(add-hook 'multiple-cursors-mode-disabled-hook #'off-mc)
+( add-hook 'multiple-cursors-mode-enabled-hook #'on-mc)
+( add-hook 'multiple-cursors-mode-disabled-hook #'off-mc)
 
 (define-key mc/keymap (kbd "<return>") nil)
 ;; Exit mc mode on <escape>
@@ -348,7 +198,6 @@
 (bind-key* "C-d" 'adelrune/mc-mark-next-symbol)
 (bind-key* "C-S-a" 'mc/mark-all-dwim)
 
-
 ;; thanks https://emacs.stackexchange.com/a/51452 (but heavily modified)
 (mc/load-lists)
 (add-to-list 'mc/cmds-to-run-once
@@ -361,6 +210,7 @@
                       (if (> (mc/num-cursors) 1)
                           (kill-ring-save 0 0 t)
                         (apply oldfn args))))
+
 ;; thanks https://stackoverflow.com/a/40390199
 ;; don't destroy other windows with keyboard-escape-quit
 (defadvice keyboard-escape-quit
@@ -393,10 +243,10 @@
   (interactive "^")
   (beginning-of-line-text))
 
-(bind-key* "<escape>" 'adelrune/kb-escape-quit)
+(global-set-key (kbd "<escape>") 'adelrune/kb-escape-quit)
 (bind-key* "C-g" 'goto-line)
 (bind-key* "C-S-s" 'adelrune/save-as)
-(bind-key* "C-s" 'adelrune/save)
+(global-set-key (kbd "C-s") 'adelrune/save)
 (bind-key* "C-q" 'adelrune/begin-line)
 (bind-key* "C-a" 'mark-whole-buffer)
 (bind-key* "C-w" 'kill-current-buffer)
@@ -404,7 +254,6 @@
 (bind-key* "M-p" 'previous-buffer)
 (bind-key* "S-<prior>"  '(lambda () (interactive) (scroll-down 2)))
 (bind-key* "S-<next>"  '(lambda () (interactive) (scroll-up 2)))
-(global-unset-key (kbd "M-c"))
 
 (defun adelrune/recenter-top-bottom ()
   (interactive)
@@ -505,7 +354,9 @@ Git gutter:
                            (memq cmd mc/cmds-to-run-for-all)
                            (mc/prompt-for-inclusion-in-whitelist cmd)))
                   (mc/execute-command-for-all-fake-cursors cmd))))))
+
 (use-package async)
+
 (use-package helm
   :ensure t
   :bind
@@ -520,7 +371,6 @@ Git gutter:
   ;; wtf helm pingin random machines because of stupid ffap defaults ?? stop that please
   (setq ffap-machine-p-known 'reject)
   (progn
-    (require 'helm-config)
     (helm-mode 1)
     (setq helm-quick-update                     t ; do not display invisible candidates
           helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
@@ -538,11 +388,10 @@ Git gutter:
 (defun adelrune/gimme-gimme-a-region-value-after-midnight ()
   (substring-no-properties (buffer-substring (region-beginning) (region-end))))
 
-(defun adelrune/counsel-rg-take-the-right-thing-plz (beginning end)
-  ; interactive r adds beginning and end of region arguments
-  (interactive "r")
+(defun adelrune/counsel-rg-take-the-right-thing-plz ()
+  (interactive)
   (if (use-region-p)
-      (counsel-rg (adelrune/gimme-gimme-a-region-value-after-midnight) )
+      (counsel-rg (adelrune/gimme-gimme-a-region-value-after-midnight))
     (counsel-rg(thing-at-point 'symbol))))
 
 (use-package counsel
@@ -553,12 +402,6 @@ Git gutter:
     :bind
   ("C-f" . swiper))
 
-;; (require 'beacon)
-;; (beacon-mode 1)
-;; (beacon-blink)
-;; (setq beacon-blink-duration 0.1)
-;; (setq beacon-blink-delay 0)
-;; (setq beacon-size 200)
 (defmacro adelrune/flash-when-scroll (the-thing &rest body)
   `(defun ,the-thing ()
      (interactive)
@@ -630,8 +473,8 @@ Git gutter:
 (use-package yasnippet
   :config
   :init
-  (yas-global-mode 1)
-  )
+  (yas-global-mode 1))
+
 (use-package yasnippet-snippets)
 
 (define-key yas-minor-mode-map [tab] nil)
@@ -675,47 +518,6 @@ Git gutter:
   (setq dired-sidebar-use-term-integration t)
   (setq dired-sidebar-use-custom-font t))
 
-(use-package ibuffer)
-
-(use-package ibuffer-projectile)
-
-(add-hook 'ibuffer-hook
-    (lambda ()
-      (ibuffer-projectile-set-filter-groups)
-      (unless (eq ibuffer-sorting-mode 'alphabetic)
-        (ibuffer-do-sort-by-alphabetic))))
-
-(use-package ibuffer-sidebar
-  :ensure t
-  :bind (("C-x C-b" . ibuffer-sidebar-toggle-sidebar))
-  :ensure nil
-  :commands (ibuffer-sidebar-toggle-sidebar))
-
-;; (use-package sr-speedbar)
-
-;;(use-package perspective)
-;;(persp-mode)
-
-;;(use-package persp-projectile)
-
-
-;; (use-package persp-mode
-;;   :init
-;;   (setq persp-autokill-buffer-on-remove 'kill-weak)
-;;   :config
-;;   (persp-mode 1)
-;;   )
-
-;; (use-package persp-mode-projectile-bridge
-;;   :config
-;;   (add-hook 'persp-mode-projectile-bridge-mode-hook
-;;             #'(lambda ()
-;;                 (if persp-mode-projectile-bridge-mode
-;;                     (persp-mode-projectile-bridge-find-perspectives-for-all-buffers)
-;;                   (persp-mode-projectile-bridge-kill-perspectives))))
-;;   (persp-mode-projectile-bridge-mode 1)
-;;  )
-
 (use-package yaml-mode)
 (use-package json-mode)
 
@@ -730,15 +532,14 @@ Git gutter:
   (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
   (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
   (add-to-list 'auto-mode-alist '("\\.jsx?$" . web-mode))
-  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
-  )
+  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))))
 
 (defun my-web-mode-hook ()
   "Hooks for Web mode."
   (setq web-mode-markup-indent-offset 2)
   (setq web-mode-css-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-)
+  (setq web-mode-code-indent-offset 2))
+
 (add-hook 'web-mode-hook  'my-web-mode-hook)
 (add-hook 'web-mode-hook  'flycheck-mode)
 
@@ -746,19 +547,12 @@ Git gutter:
   :ensure t
   :init
   :config
-  (flycheck-add-mode 'javascript-standard 'web-mode)
-  )
-;; haaaaack
-;; (add-hook 'eglot--managed-mode-hook (lambda () (flymake-mode -1)))
-
-;; (add-to-list 'eglot-server-programs '(web-mode "typescript-language-server"))
-
+  (flycheck-add-mode 'javascript-standard 'web-mode))
 
 ;; gets rid of stupid emac buffer on first project switch
 (defun adelrune/switch-project ()
   (interactive)
   ;; helm-projectile-switch-project doesn't exist before a call to helm-projectile ?!?!?
-
   (progn
     (helm-projectile-on)
     (helm-projectile-switch-project)))
@@ -805,12 +599,12 @@ Git gutter:
           (setq i (+ 1 i))))
       (delete-region (line-beginning-position) (+ 1 (line-end-position)))))
 
-
 (bind-key* "C-S-k" 'adelrune/ruthlessly-kill-lines)
 
 (when (display-graphic-p)
-  (scroll-bar-mode 1)
+  (scroll-bar-mode -1)
   (tool-bar-mode -1))
+
 ;;; This is weird in console but whatever.
 (menu-bar-mode -1)
 (blink-cursor-mode -1)
@@ -818,8 +612,10 @@ Git gutter:
 (ido-mode t)
 (global-cwarn-mode 1)
 (show-paren-mode)
+
 (setq show-paren-delay 0)
 (column-number-mode)
+
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (defun adelrune/make-emmet-work-in-web-mode ()
@@ -827,13 +623,8 @@ Git gutter:
   (if (equal major-mode 'mhtml-mode)
     (emmet-expand-yas)
     (yas-expand)))
+
 (define-key cua-global-keymap (kbd "<C-return>") 'adelrune/make-emmet-work-in-web-mode)
-
-(use-package monokai-theme)
-;; (use-package color-theme-sanityinc-tomorrow)
-
-;; (load-theme 'monokai t)
-;; (load-theme 'sanityinc-tomorrow-night t)
 
 (use-package doom-themes
   :ensure t
@@ -841,19 +632,19 @@ Git gutter:
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  ;; (load-theme 'doom-laserwave t)
-  ;; (load-theme 'doom-spacegrey t)
-  ;; (load-theme 'doom-one t)
   (load-theme 'doom-solarized-dark-high-contrast t))
 
 (defun minibuffer-bg ()
   (let ((darkened-bg (color-darken-name (face-attribute 'default :background) 2) ))
          (set (make-local-variable 'face-remapping-alist)
               (list (list 'default :background darkened-bg)))))
+
 (add-hook 'minibuffer-setup-hook 'minibuffer-bg)
 
-(add-to-list 'initial-frame-alist '(font . "Fira Code-12"))
-(add-to-list 'default-frame-alist '(font . "Fira Code-12"))
+(add-to-list 'initial-frame-alist '(font . "Fantasque Sans Mono-14"))
+(add-to-list 'default-frame-alist '(font . "Fantasque Sans Mono-14"))
+;; (add-to-list 'initial-frame-alist '(font . "Fira Code-12"))
+;; (add-to-list 'default-frame-alist '(font . "Fira Code-12"))
 
 (defvar killed-file-list nil
   "List of recently killed files.")
@@ -877,7 +668,7 @@ Git gutter:
 
 (use-package highlight-symbol
   :config
-   (setq highlight-symbol-idle-delay 0.1)
+   (setq highlight-symbol-idle-delay 0.4)
    :bind ("C-S-d" . highlight-symbol-next))
 
 (highlight-symbol-mode)
@@ -887,6 +678,7 @@ Git gutter:
                     (((class color) (background light))
                      (:background "gray90"))))
 (add-hook 'prog-mode-hook 'highlight-symbol-mode)
+
 ;; TODO : fix this.
 (defun adelrune/good-comment ()
   (interactive)
@@ -896,12 +688,38 @@ Git gutter:
         (comment-dwim nil))
       (save-excursion (comment-line 1)))))
 
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-category-overrides '((file (styles basic partial-completion))))
+  :init
+  (setq completion-styles '(orderless basic))
+  (setq orderless-matching-styles '(orderless-flex)))
+
+(use-package corfu
+  :custom
+  (corfu-auto t)
+  (corfu-auto-prefix 2)
+  (corfu-auto-delay 0.15)
+  :bind
+  (:map corfu-map
+        ("RET" . nil)
+        ("<escape>" . corfu-quit)
+        ("C-s" . (lambda() (interactive)
+                   (progn
+                     (adelrune/save)
+                     (call-interactively 'corfu-quit)))))
+  :init
+  (setq completion-styles '(orderless basic))
+  (global-corfu-mode))
+
+(global-unset-key (kbd "M-c"))
 (bind-key* "C-M-c" 'adelrune/good-comment)
 (bind-key* "M-c" 'adelrune/good-comment)
 
 ;; All of this shit is to simulate sublime's way of dealing with shift
 (global-subword-mode 1)
-;;Higher order function would be nice but I can't be bothered to learn elisp
+;; Higher order function would be nice but I can't be bothered to learn elisp
 ;; TODO : make this part less dumb
 (defun adelrune/forward-word ()
   (interactive "^")
@@ -982,7 +800,9 @@ Git gutter:
           (delete-region (point) (line-beginning-position))
         (delete-region (point) final-char-point)
         ))))
+
 (setq-default cursor-type 'bar)
+
 (defun adelrune/backward-kill-symbol ()
   (interactive)
   (let
@@ -1000,9 +820,7 @@ Git gutter:
           (delete-region (point) (line-beginning-position))
         (delete-region (point) final-char-point)
         ))))
-  ;; (cond ((eq (char-before) 10) (left-char 1))
-  ;;    ((looking-back "\n\s-*\\W+" 250) (progn (message "%s" (char-after)) (beginning-of-line)))
-  ;;    (t (backward-word))))
+
 (bind-key* "C-<backspace>" 'adelrune/backward-kill-symbol)
 (bind-key* "C-<right>" 'adelrune/forward-symbol)
 (bind-key* "C-<left>" 'adelrune/backward-symbol)
@@ -1015,7 +833,8 @@ Git gutter:
 
 (defun adelrune/next-win ()
     (interactive)
-  (other-window 1))
+    (other-window 1))
+
 (defun adelrune/previous-win ()
     (interactive)
   (other-window -1))
@@ -1036,24 +855,15 @@ Git gutter:
  ;; If there is more than one, they won't work right.
  )
 
-(use-package smart-tab
-  :init (global-smart-tab-mode 1))
-
-
-(defun add-emmet-expand-to-smart-tab-completions ()
-  ;; Add an entry for current major mode in
-  ;; `smart-tab-completion-functions-alist' to use
-  ;; `emmet-expand-line'.
-  (add-to-list 'smart-tab-completion-functions-alist
-               (cons major-mode #'emmet-expand-line)))
-(add-emmet-expand-to-smart-tab-completions)
 (use-package scad-mode)
 (use-package emmet-mode)
+
 (add-hook 'sgml-mode-hook 'emmet-mode)
 (add-hook 'sgml-mode-hook 'add-emmet-expand-to-smart-tab-completions)
 (add-hook 'css-mode-hook 'emmet-mode)
 (add-hook 'css-mode-hook 'add-emmet-expand-to-smart-tab-completions)
 (add-hook 'emmet-mode-hook (lambda () (setq emmet-indentation 2)))
+
 (setq emmet-move-cursor-between-quotes t)
 
 ;; thanks emacs rocks person
@@ -1087,6 +897,13 @@ Git gutter:
                       nil
                     '(display-buffer-same-window))))))
 
+
+(defun blamer-callback-show-commit-diff (commit-info)
+  (interactive)
+  (let ((commit-hash (plist-get commit-info :commit-hash)))
+    (when commit-hash
+      (magit-show-commit commit-hash))))
+
 (use-package blamer
   :ensure t
   :defer 20
@@ -1099,25 +916,10 @@ Git gutter:
                     :height 110
                     :italic t)))
   :config
-  (global-blamer-mode 1))
+  (setq blamer-bindings '(("<mouse-1>" . blamer-callback-show-commit-diff))))
 
+(global-blamer-mode 1)
 (setq blamer-max-commit-message-length 100)
-
-(use-package deadgrep :ensure t
-  :bind )
-
-;; thanks https://github.com/Wilfred/deadgrep/issues/66#issuecomment-743785822
-(defun pp/deadgrep-view-file ()
-  "View result under cursor in other window."
-  (interactive)
-  (deadgrep-visit-result-other-window)
-  (other-window 1))
-
-(use-package deadgrep
-  :bind
-  ("<f5>" . deadgrep)
-  (:map deadgrep-mode-map
-              ("v" . pp/deadgrep-view-file)))
 
 ;; https://superuser.com/questions/306272/disable-emacs-auto-indentation-for-javascript-mode-completely
 (defun fix-js-indendation-mode-hook ()
@@ -1233,6 +1035,9 @@ and M-n or M-<down> for moving down."
         (iimage-mode))
     (iimage-recenter)))
 
+;; region highlight extends only to the end of characters
+(set-face-attribute 'region nil :extend nil)
+
 (defun eval-trad-list ()
   (interactive)
   (message-box (shell-command-to-string "python3 /home/guillaume/Documents/partitions/itm/itm_utils.py")))
@@ -1245,5 +1050,6 @@ and M-n or M-<down> for moving down."
  '(custom-safe-themes
    '("2f8eadc12bf60b581674a41ddc319a40ed373dd4a7c577933acaff15d2bf7cc6" default))
  '(package-selected-packages
-   '(ws-butler rainbow-delimiters rainbow-delimiter-mode beacon-mode doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode irony hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
- '(warning-suppress-log-types '((comp))))
+   '(indent-tools orderless company-tern cape corfu which-key benchmark-init prism phi-grep ws-butler rainbow-delimiters rainbow-delimiter-mode beacon-mode doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
+ '(warning-suppress-log-types '((use-package))))
+(put 'scroll-left 'disabled nil)

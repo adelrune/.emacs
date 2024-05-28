@@ -12,6 +12,7 @@
         adelrune/expand-dong
         adelrune/forward-kill-symbol
         adelrune/forward-kill-word
+        adelrune/forward-paragraph
         adelrune/forward-symbol
         adelrune/forward-word
         adelrune/good-comment
@@ -24,20 +25,34 @@
         c-electric-paren
         c-electric-pound
         c-electric-semi&comma
+        c-electric-slash
+        c-electric-star
+        c-indent-line-or-region
+        capitalize-region
+        complete-symbol
+        completion-at-point
+        corfu-complete
+        corfu-next
         cua-copy-region
         cua-copy-region
         cua-copy-region
         cua-copy-region
         cua-copy-region
+        cua-cut-region
         cua-paste
+        downcase-region
         forward-sexp
+        helm-show-kill-ring
         ignore
         json-decrement-number-at-point
+        indent-for-tab-command
         json-increment-number-at-point
         markdown-enter-key
         markdown-outdent-or-delete
         mouse-set-region
+        move-lines-up
         smart-tab
+        tab-to-tab-stop
         ))
 
 (setq mc/cmds-to-run-once
@@ -52,6 +67,7 @@
         cua--prefix-override-handler
         cua--prefix-override-handler
         custom/copy-across-cursors
+        electric-newline-and-maybe-indent
         helm-buffers-list
         helm-confirm-and-exit-minibuffer
         multiple-cursors-mode
