@@ -47,6 +47,7 @@
         forward-sexp
         helm-show-kill-ring
         ignore
+        json-decrement-number-at-point
         indent-for-tab-command
         json-increment-number-at-point
         markdown-enter-key

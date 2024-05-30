@@ -102,6 +102,18 @@
 
 (add-hook 'c++-mode-hook (lambda ()
                            (platformio-conditionally-enable)))
+(defun adelrune/unfuck-jan-lawa-lili ()
+  (interactive)
+  (progn (call-interactively 'mark-whole-buffer)
+         (call-interactively 'indent-region)
+         (replace-string "   <br/>" "<p data-nanpa-toki=\"\">")
+         (beginning-of-buffer)
+         (replace-string "<p>" "<p data-nanpa-toki=\"\">")
+         (beginning-of-buffer)
+         (replace-string "<br/>" "</p>")
+         (beginning-of-buffer)
+         (call-interactively 'mark-whole-buffer)
+         (call-interactively 'indent-region)))
 
 (use-package arduino-mode)
 
