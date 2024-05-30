@@ -1098,16 +1098,6 @@ and M-n or M-<down> for moving down."
  '(custom-safe-themes
    '("2f8eadc12bf60b581674a41ddc319a40ed373dd4a7c577933acaff15d2bf7cc6"
      default))
- '(package-selected-packages
-   '(all-the-icons arduino-mode avy benchmark-init blamer cape cmake-mode
-                   corfu counsel dired-sidebar doom-modeline
-                   doom-themes dumb-jump embark emmet-mode
-                   expand-region git-gutter-fringe google-c-style
-                   helm-flx helm-projectile highlight-symbol hydra
-                   json-mode magit markdown-mode minions
-                   multiple-cursors nim-mode orderless platformio-mode
-                   processing-mode racer scad-mode sublimity undo-tree
-                   visual-regexp-steroids vscode-icon web-mode
-                   which-key xonsh-mode yaml-mode yasnippet-snippets))
+ '(package-selected-packages nil)
  '(warning-suppress-log-types '((use-package))))
 (put 'scroll-left 'disabled nil)
