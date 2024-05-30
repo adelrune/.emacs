@@ -75,6 +75,8 @@
 
 (use-package flx)
 
+(use-package cfdg-mode)
+
 (use-package doom-modeline
   :init
   (doom-modeline-mode 1)
@@ -95,7 +97,15 @@
 (add-hook 'c-mode-common-hook 'google-set-c-style)
 (add-hook 'c-mode-common-hook 'google-make-newline-indent)
 
+
+(use-package platformio-mode)
+
+(add-hook 'c++-mode-hook (lambda ()
+                           (platformio-conditionally-enable)))
+
 (use-package arduino-mode)
+
+(use-package xonsh-mode)
 
 (use-package processing-mode)
 
@@ -327,6 +337,39 @@ Git gutter:
   ("R" git-gutter:set-start-revision)
   ("q" nil :color blue))
 
+;; https://gist.github.com/ptrv/7d728b7dc4f2113ef915dba3b66f052c
+(defhydra hydra-smerge
+  (:color red :hint nil
+          :pre (smerge-mode 1))
+  "
+^Move^ ^Keep^ ^Diff^ ^Pair^
+------------------------------------------------------
+  _<up>_: next _b_ase _R_efine _<_: base-mine
+_<down>_: prev _m_ine _E_diff _=_: mine-other
+^ ^ _o_ther _C_ombine _>_: base-other
+^ ^ _a_ll _r_esolve
+_l_ : recenter
+_q_uit _RET_: current
+"
+  ("RET" smerge-keep-current)
+  ("C" smerge-combine-with-next)
+  ("E" smerge-ediff)
+  ("R" smerge-refine)
+  ("a" smerge-keep-all)
+  ("b" smerge-keep-base)
+  ("m" smerge-keep-mine)
+  ("<up>" smerge-next)
+  ("o" smerge-keep-other)
+  ("<down>" smerge-prev)
+  ("r" smerge-resolve)
+  ("<" smerge-diff-base-mine)
+  ("=" smerge-diff-mine-other)
+  (">" smerge-diff-base-other)
+  ("l" adelrune/recenter-top-bottom)
+  ("q" nil :color blue))
+
+(bind-key* "C-S-m" 'hydra-smerge/body)
+
 ;; thanks snippins1987 https://old.reddit.com/r/emacs/comments/eeyhdz/weekly_tipstricketc_thread/fch1bkv/
 (defun adelrune/helm-M-x ()
     (interactive)
@@ -372,6 +415,20 @@ Git gutter:
   :config
   (ivy-mode))
 
+(defun adelrune/good-indent-rigidly ()
+  (interactive)
+  (if (use-region-p)
+      (let ((init-region-start (region-beginning)) (init-region-end (region-end)))
+        (progn
+          (deactivate-mark)
+          (goto-char init-region-start)
+          (beginning-of-line)
+          (set-mark (point))
+          (goto-char init-region-end)
+          (call-interactively 'indent-rigidly)))))
+
+(bind-key* "C-x <tab>" 'adelrune/good-indent-rigidly)
+
 (defun adelrune/gimme-gimme-a-region-value-after-midnight ()
   (substring-no-properties (buffer-substring (region-beginning) (region-end))))
 
@@ -385,9 +442,15 @@ Git gutter:
   :bind
   ("C-S-f" . adelrune/counsel-rg-take-the-right-thing-plz))
 
+(defun adelrune/swiper-with-region ()
+  (interactive)
+  (if (use-region-p)
+      (swiper (adelrune/gimme-gimme-a-region-value-after-midnight))
+    (swiper)))
+
 (use-package swiper
     :bind
-  ("C-f" . swiper))
+  ("C-f" . adelrune/swiper-with-region))
 
 (defmacro adelrune/flash-when-scroll (the-thing &rest body)
   `(defun ,the-thing ()
@@ -483,9 +546,7 @@ Git gutter:
 (use-package helm-flx)
 (helm-flx-mode 1)
 
-(use-package vscode-icon
-  :ensure t
-  :commands (vscode-icon-for-file))
+(use-package nerd-icons)
 
 (use-package dired-sidebar
   :bind (("C-k C-b" . dired-sidebar-toggle-sidebar))
@@ -1035,8 +1096,18 @@ and M-n or M-<down> for moving down."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("2f8eadc12bf60b581674a41ddc319a40ed373dd4a7c577933acaff15d2bf7cc6" default))
+   '("2f8eadc12bf60b581674a41ddc319a40ed373dd4a7c577933acaff15d2bf7cc6"
+     default))
  '(package-selected-packages
-   '(indent-tools orderless company-tern cape corfu which-key benchmark-init prism phi-grep ws-butler rainbow-delimiters rainbow-delimiter-mode beacon-mode doom-themes blamer multi-vterm ibuffer-projectile ibuffer-sidebar sr-speedbar treemacs yasnippet-snippets yaml-mode xonsh-mode web-mode vterm vscode-icon visual-regexp-steroids use-package undo-tree tabbar sublimity smart-tab scad-mode racer processing-mode persp-mode-projectile-bridge nim-mode multiple-cursors monokai-theme minions magit lsp-mode json-mode js2-mode hydra highlight-symbol helm-projectile helm-fuzzier helm-flx google-c-style git-gutter-fringe gdscript-mode expand-region emmet-mode embark eglot dumb-jump doom-modeline dired-sidebar deadgrep csharp-mode counsel company-quickhelp company-jedi company-fuzzy color-theme-sanityinc-tomorrow color-theme cmake-mode avy arduino-mode))
+   '(all-the-icons arduino-mode avy benchmark-init blamer cape cmake-mode
+                   corfu counsel dired-sidebar doom-modeline
+                   doom-themes dumb-jump embark emmet-mode
+                   expand-region git-gutter-fringe google-c-style
+                   helm-flx helm-projectile highlight-symbol hydra
+                   json-mode magit markdown-mode minions
+                   multiple-cursors nim-mode orderless platformio-mode
+                   processing-mode racer scad-mode sublimity undo-tree
+                   visual-regexp-steroids vscode-icon web-mode
+                   which-key xonsh-mode yaml-mode yasnippet-snippets))
  '(warning-suppress-log-types '((use-package))))
 (put 'scroll-left 'disabled nil)

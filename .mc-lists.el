@@ -33,12 +33,15 @@
         completion-at-point
         corfu-complete
         corfu-next
+        cua-copy-handler
         cua-copy-region
         cua-copy-region
         cua-copy-region
         cua-copy-region
         cua-copy-region
+        cua-cut-handler
         cua-cut-region
+        cua-exchange-point-and-mark
         cua-paste
         downcase-region
         forward-sexp
