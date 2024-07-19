@@ -1,0 +1,7 @@
+# -*- mode: python -*-
+# name: embed_once
+# key: embed_once
+# expand-env: ((embed (random 999999)))
+# --
+if "did_embed_`embed`" not in globals():
+    globals()["did_embed_`embed`"] = True; from IPython import embed; embed()

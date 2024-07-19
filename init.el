@@ -39,9 +39,19 @@
 (setq backup-directory-alist
       '((".*" . "~/.emacs.d/aux/")))
 
+(defun insert-date (prefix)
+  "Insert the current date. With prefix-argument, use ISO format. With
+   two prefix arguments, write out the day and month name."
+  (interactive "P")
+  (let ((format (cond
+                 ((not prefix) "%d.%m.%Y")
+                 ((equal prefix '(4)) "%Y-%m-%d")
+                 ((equal prefix '(16)) "%A, %d. %B %Y")))
+        (system-time-locale "fr_CA"))
+    (insert (format-time-string format))))
 
 ;; undo stuff
-
+(message system-time-locale)
 (use-package undo-tree
   :bind
   ("C-z" . 'undo-tree-undo)
@@ -50,6 +60,12 @@
 (setq undo-tree-enable-undo-in-region nil)
 (setq undo-tree-auto-save-history nil)
 (global-undo-tree-mode)
+
+(use-package minimap
+  :config
+  (setq minimap-window-location 'right)
+  (setq minimap-width-fraction 0.05)
+  (setq minimap-minimum-width 20))
 
 ;; Prevent undo tree files from polluting your git repo
 (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
@@ -405,7 +421,7 @@ _q_uit _RET_: current
   (("M-x" . adelrune/helm-M-x)
    ("C-S-v" . 'helm-show-kill-ring)
    ("C-o" . helm-find-files)
-   ("C-<dead-circumflex>" . helm-buffers-list)
+   ("C-<dead-cedilla>" . helm-buffers-list)
    (:map helm-find-files-map ("<tab>" . helm-execute-persistent-action)
    ))
   :config
@@ -545,7 +561,7 @@ _q_uit _RET_: current
 (use-package projectile
   :ensure t
   :bind
-  ("C-<dead-cedilla>" . projectile-switch-to-buffer)
+  ("C-<dead-circumflex>" . projectile-switch-to-buffer)
   :init
   (projectile-mode +1))
 
@@ -629,14 +645,17 @@ _q_uit _RET_: current
   (let* ( (project-root (projectile-ensure-project (projectile-project-root)))
           (proj-path (expand-file-name ".projectile" project-root))
           (init-files (if (file-exists-p proj-path) (adelrune--read-lines proj-path) nil))
-          (readme-path (expand-file-name "README.md" project-root)))
+          (readme-paths (mapcar (lambda (x)
+                                 (expand-file-name x project-root))
+                               '("README.md" "readme.md"))))
     (if init-files
         (progn
           (mapcar (lambda (filename)
                     (find-file (expand-file-name filename project-root)))
                   init-files))
-      (if (file-exists-p readme-path)
-          (find-file readme-path)))))
+      (dolist (readme-path readme-paths)
+        (if (file-exists-p readme-path)
+            (find-file readme-path))))))
 
 (setq projectile-switch-project-action 'adelrune/projectile-open-default-file)
 
