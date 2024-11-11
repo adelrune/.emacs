@@ -16,6 +16,7 @@
         adelrune/forward-symbol
         adelrune/forward-word
         adelrune/good-comment
+        adelrune/good-indent-rigidly
         adelrune/recenter-top-bottom
         adelrune/ruthlessly-kill-lines
         backward-sexp
@@ -47,8 +48,8 @@
         forward-sexp
         helm-show-kill-ring
         ignore
-        json-decrement-number-at-point
         indent-for-tab-command
+        json-decrement-number-at-point
         json-increment-number-at-point
         markdown-enter-key
         markdown-outdent-or-delete
@@ -56,6 +57,7 @@
         move-lines-up
         smart-tab
         tab-to-tab-stop
+        yaml-electric-backspace
         ))
 
 (setq mc/cmds-to-run-once

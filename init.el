@@ -647,7 +647,7 @@ _q_uit _RET_: current
           (init-files (if (file-exists-p proj-path) (adelrune--read-lines proj-path) nil))
           (readme-paths (mapcar (lambda (x)
                                  (expand-file-name x project-root))
-                               '("README.md" "readme.md"))))
+                               '("README.md" "readme.md" "README.rst" "readme.rst"))))
     (if init-files
         (progn
           (mapcar (lambda (filename)
@@ -790,6 +790,7 @@ _q_uit _RET_: current
                      (call-interactively 'corfu-quit)))))
   :init
   (setq completion-styles '(orderless basic))
+  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster) (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
   (global-corfu-mode))
 
 (global-unset-key (kbd "M-c"))
@@ -1011,6 +1012,8 @@ _q_uit _RET_: current
                   (find-file (string-join (list (projectile-project-p) "Nouveau document " (number-to-string (random 999999))))))
 
 (bind-key* "C-n" 'adelrune/new-file)
+
+(use-package cython-mode)
 
 (use-package csharp-mode)
 
