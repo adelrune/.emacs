@@ -15,7 +15,7 @@
   (package-refresh-contents)
   (package-install 'use-package))
 (require 'use-package)
-password
+
 (load-library "use-package")
 ;; (package-refresh-contents)
 (setq use-package-always-ensure t)
