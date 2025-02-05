@@ -53,6 +53,8 @@
         json-increment-number-at-point
         markdown-enter-key
         markdown-outdent-or-delete
+        mc--insert-number-and-increase
+        increment-number-at-point
         mouse-set-region
         move-lines-up
         smart-tab
@@ -65,7 +67,9 @@
         adelrune/helm-M-x
         adelrune/mc-mark-next-symbol
         adelrune/save
+        adelrune/swiper-with-region
         centaur-tabs-forward
+        comment-region
         cua--prefix-override-handler
         cua--prefix-override-handler
         cua--prefix-override-handler
@@ -75,6 +79,7 @@
         electric-newline-and-maybe-indent
         helm-buffers-list
         helm-confirm-and-exit-minibuffer
+        helm-projectile-switch-to-buffer
         multiple-cursors-mode
         tabbar-backward-tab
         tabbar-forward-tab

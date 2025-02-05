@@ -189,6 +189,14 @@
 (defvar multiple-cursors-mode-enabled-hook nil)
 (defvar multiple-cursors-mode-disabled-hook nil)
 
+(defun increment-number-at-point ()
+  ;; thanks https://www.emacswiki.org/emacs/IncrementNumber
+  (interactive)
+  (skip-chars-backward "0-9")
+  (or (looking-at "[0-9]+")
+      (error "No number at point"))
+  (replace-match (number-to-string (1+ (string-to-number (match-string 0))))))
+
 (defun on-mc ()
   (setq-default cursor-type 'block)
   (global-corfu-mode -1))
@@ -443,19 +451,41 @@ _q_uit _RET_: current
   :config
   (ivy-mode))
 
-(defun adelrune/good-indent-rigidly ()
-  (interactive)
-  (if (use-region-p)
-      (let ((init-region-start (region-beginning)) (init-region-end (region-end)))
-        (progn
-          (deactivate-mark)
-          (goto-char init-region-start)
-          (beginning-of-line)
-          (set-mark (point))
-          (goto-char init-region-end)
-          (call-interactively 'indent-rigidly)))))
 
+(defmacro adelrune/extend-selection-to-whole-lines (the-thing &rest body)
+  ;; this forces the selection to be extended to every characters in the selected lines
+  ;; before executing the body.
+  `(defun ,the-thing ()
+       (interactive)
+       (if (use-region-p)
+           (let ((init-region-start (region-beginning)) (init-region-end (region-end)))
+             (progn
+               (deactivate-mark)
+               (goto-char init-region-start)
+               (beginning-of-line)
+               (set-mark (point))
+               (goto-char init-region-end)
+               (end-of-line)
+               ,@body))
+         ,@body)))
+
+(adelrune/extend-selection-to-whole-lines adelrune/good-indent-rigidly (call-interactively 'indent-rigidly))
 (bind-key* "C-x <tab>" 'adelrune/good-indent-rigidly)
+
+;; TODO : fix this. (I don't remember what needs fixing though ... maybe the extend-selection fixes it ? It does fix some annoying stuff with it.)
+(defun adelrune/good-comment-internal ()
+  (interactive)
+  (progn
+    (if (and (eq (char-before) 10) (looking-at "[:blank:]*\n"))
+        (progn
+        (comment-dwim nil))
+      (save-excursion (comment-line 1)))))
+
+(adelrune/extend-selection-to-whole-lines adelrune/good-comment (call-interactively 'adelrune/good-comment-internal))
+;; I don't remember why I have two keybindings for comments ....
+(global-unset-key (kbd "M-c"))
+(bind-key* "C-M-c" 'adelrune/good-comment)
+(bind-key* "M-c" 'adelrune/good-comment)
 
 (defun adelrune/gimme-gimme-a-region-value-after-midnight ()
   (substring-no-properties (buffer-substring (region-beginning) (region-end))))
@@ -758,14 +788,6 @@ _q_uit _RET_: current
                      (:background "gray90"))))
 (add-hook 'prog-mode-hook 'highlight-symbol-mode)
 
-;; TODO : fix this.
-(defun adelrune/good-comment ()
-  (interactive)
-  (progn
-    (if (and (eq (char-before) 10) (looking-at "[:blank:]*\n"))
-        (progn
-        (comment-dwim nil))
-      (save-excursion (comment-line 1)))))
 
 (use-package orderless
   :ensure t
@@ -792,10 +814,6 @@ _q_uit _RET_: current
   (setq completion-styles '(orderless basic))
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster) (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
   (global-corfu-mode))
-
-(global-unset-key (kbd "M-c"))
-(bind-key* "C-M-c" 'adelrune/good-comment)
-(bind-key* "M-c" 'adelrune/good-comment)
 
 ;; All of this shit is to simulate sublime's way of dealing with shift
 (global-subword-mode 1)
