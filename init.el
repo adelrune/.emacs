@@ -451,23 +451,39 @@ _q_uit _RET_: current
   :config
   (ivy-mode))
 
+(defun gabc/mark-range (start end)
+  (set-mark (min start end))
+  (goto-char (max start end))
+  (activate-mark))
+
+(defun gabc/beginning-of-line-region (pos)
+  (save-excursion
+    (goto-char pos)
+    (beginning-of-line)
+    (point)))
+
+(defun gabc/end-of-line-region (pos)
+  (save-excursion
+    (goto-char pos)
+    (end-of-line)
+    (point)))
 
 (defmacro adelrune/extend-selection-to-whole-lines (the-thing &rest body)
   ;; this forces the selection to be extended to every characters in the selected lines
   ;; before executing the body.
-  `(defun ,the-thing ()
-       (interactive)
-       (if (use-region-p)
-           (let ((init-region-start (region-beginning)) (init-region-end (region-end)))
-             (progn
-               (deactivate-mark)
-               (goto-char init-region-start)
-               (beginning-of-line)
-               (set-mark (point))
-               (goto-char init-region-end)
-               (end-of-line)
-               ,@body))
-         ,@body)))
+  `(defun ,the-thing (reg-beg reg-end)
+     (interactive "r")
+     (if (use-region-p)
+         (let ((exc-point-mark-p (= (point) reg-beg)))
+            ,@body
+            (let* ((reg-beg-1 (gabc/beginning-of-line-region (region-beginning)))
+                   (reg-end-1 (gabc/end-of-line-region (region-end))))
+              (setq deactivate-mark nil)
+              (gabc/mark-range reg-beg-1 reg-end-1)
+              ;; If `point' is at the beggining of the region, we need to put it back there.
+              (when exc-point-mark-p
+                (exchange-point-and-mark))))
+        ,@body)))
 
 (adelrune/extend-selection-to-whole-lines adelrune/good-indent-rigidly (call-interactively 'indent-rigidly))
 (bind-key* "C-x <tab>" 'adelrune/good-indent-rigidly)
@@ -742,6 +758,7 @@ _q_uit _RET_: current
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
   (load-theme 'doom-solarized-dark-high-contrast t))
+  ;; (load-theme 'doom-bluloco-light t))
 
 (defun minibuffer-bg ()
   (let ((darkened-bg (color-darken-name (face-attribute 'default :background) 2) ))
@@ -814,6 +831,9 @@ _q_uit _RET_: current
   (setq completion-styles '(orderless basic))
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster) (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
   (global-corfu-mode))
+
+(use-package clojure-mode)
+(use-package cider)
 
 ;; All of this shit is to simulate sublime's way of dealing with shift
 (global-subword-mode 1)
